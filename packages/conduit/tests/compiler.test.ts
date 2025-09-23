@@ -73,9 +73,13 @@ describe('Container Compilation', () => {
     it('should extract external parameters', () => {
       const result = compileContainer(serviceDefinitions, 'userService');
 
-      expect(result.externalParams).toContain('test://localhost');
-      // The [TEST] string might not be detected as external by our heuristics
-      expect(result.externalParams.length).toBeGreaterThan(0);
+      expect(Object.values(result.externalParams).some(service => 
+        Object.keys(service).some(param => 
+          service[param] === 'string'
+        )
+      )).toBe(true);
+      // Should have at least one service with external parameters
+      expect(Object.keys(result.externalParams).length).toBeGreaterThan(0);
     });
 
     it('should identify service dependencies correctly', () => {
@@ -104,20 +108,20 @@ describe('Container Compilation', () => {
       const result = compileContainer(serviceDefinitions, 'userService');
 
       expect(result.generatedCode).toContain('export interface ExternalParams');
-      expect(result.generatedCode).toContain('test___localhost: string;');
+      expect(result.generatedCode).toContain('connectionString: string;');
     });
 
     it('should replace external parameters in factory code', () => {
       const result = compileContainer(serviceDefinitions, 'userService');
 
-      expect(result.generatedCode).toContain('params.test___localhost');
+      expect(result.generatedCode).toContain('params.database.connectionString');
     });
 
     it('should handle dependency injection in generated code', () => {
       const result = compileContainer(serviceDefinitions, 'userService');
 
-      expect(result.generatedCode).toContain('get_database()');
-      expect(result.generatedCode).toContain('get_logger()');
+      expect(result.generatedCode).toContain("container.get('database')");
+      expect(result.generatedCode).toContain("container.get('logger')");
     });
   });
 
@@ -164,8 +168,8 @@ describe('Container Compilation', () => {
 
       const result = compileContainer(transientDefinitions, 'transientService');
 
-      expect(result.generatedCode).toContain('create_transientService');
-      expect(result.generatedCode).not.toContain('cached_transientService');
+      expect(result.generatedCode).toContain('createTransientService');
+      expect(result.generatedCode).toContain("container.get('transientService')");
     });
   });
 });

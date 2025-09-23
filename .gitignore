@@ -92,3 +92,4 @@ ehthumbs.db
 Thumbs.db
 
 packages/example/src/generated/
+.turbo/
