@@ -1,6 +1,6 @@
 # TypeScript Dependency Injection Framework Package - Copilot Instructions
 
-This project is a TypeScript dependency injection framework called "conduit" that provides modern DI capabilities with decorators, containers, and type safety.
+This project is a TypeScript dependency injection framework called "conduit" that provides modern DI capabilities with factory-based providers, compile-time type safety, and destructuring support.
 
 ## Project Structure
 
@@ -12,17 +12,17 @@ This project is a TypeScript dependency injection framework called "conduit" tha
 ## Development Guidelines
 
 - Use TypeScript with strict mode enabled
-- Follow dependency injection design patterns
-- Implement decorator-based service registration
-- Provide type-safe container resolution
+- Follow dependency injection design patterns using factory functions
+- Implement factory-based service registration (no decorators)
+- Provide compile-time type safety with strong typing
 - Include comprehensive unit tests
-- Support both constructor and property injection
+- Support destructuring for clean dependency access
 
-## Key Features Being Implemented
+## Key Features Implemented
 
-- Service container with lifecycle management
-- @Injectable decorator for automatic registration
-- @Inject decorator for dependency resolution
-- Support for singleton and transient scopes
-- Circular dependency detection
-- Type-safe service resolution
+- Service container with lifecycle management (singleton, transient, scoped)
+- Factory-based providers with no decorators or metadata
+- Proxy-based destructuring support for clean dependency access
+- Compile-time type safety with ServiceDefinitions<T>
+- Zero runtime dependencies
+- Type-safe service resolution with Container<T> & T
