@@ -16,8 +16,8 @@ import { Container } from './container';
  */
 export function createContainer<T extends Record<string, any>>(
   services: ServiceDefinitions<T>
-): Container<T> {
-  return new Container(services);
+): Container<T> & T {
+  return new Container(services) as Container<T> & T;
 }
 
 /**

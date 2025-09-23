@@ -201,4 +201,84 @@ describe('Container', () => {
       expect(anotherService.getDependency()).toBe(testService);
     });
   });
+
+  describe('Proxy destructuring', () => {
+    it('should allow destructuring of services from container', () => {
+      const serviceDefinitions: ServiceDefinitions<{
+        testService: TestService;
+        anotherService: AnotherService;
+      }> = {
+        testService: singleton(() => new TestServiceImpl()),
+        anotherService: scoped(
+          container => new AnotherServiceImpl(container.get('testService'))
+        ),
+      };
+
+      const container = createContainer(serviceDefinitions);
+
+      // Destructuring should work
+      const { testService, anotherService } = container;
+
+      expect(testService.getValue()).toBe('test-value');
+      expect(anotherService.getDependency()).toBe(testService);
+
+      // Should be the same instances as .get() method
+      expect(testService).toBe(container.get('testService'));
+      expect(anotherService).toBe(container.get('anotherService'));
+    });
+
+    it('should work with functions that destructure container', () => {
+      const serviceDefinitions: ServiceDefinitions<{
+        testService: TestService;
+        anotherService: AnotherService;
+      }> = {
+        testService: singleton(() => new TestServiceImpl()),
+        anotherService: scoped(
+          container => new AnotherServiceImpl(container.get('testService'))
+        ),
+      };
+
+      const container = createContainer(serviceDefinitions);
+
+      // Function that takes destructured services
+      function useServices({
+        testService,
+        anotherService,
+      }: {
+        testService: TestService;
+        anotherService: AnotherService;
+      }) {
+        return {
+          value: testService.getValue(),
+          dependency: anotherService.getDependency(),
+        };
+      }
+
+      const result = useServices(container);
+
+      expect(result.value).toBe('test-value');
+      expect(result.dependency).toBe(container.get('testService'));
+    });
+
+    it('should preserve container methods when using destructuring', () => {
+      const serviceDefinitions: ServiceDefinitions<{
+        testService: TestService;
+      }> = {
+        testService: singleton(() => new TestServiceImpl()),
+      };
+
+      const container = createContainer(serviceDefinitions);
+
+      // Destructure a service
+      const { testService } = container;
+
+      // Container methods should still work
+      expect(typeof container.get).toBe('function');
+      expect(typeof container.createScope).toBe('function');
+      expect(typeof container.dispose).toBe('function');
+
+      // And they should return the same results
+      expect(container.get('testService')).toBe(testService);
+    });
+  });
 });

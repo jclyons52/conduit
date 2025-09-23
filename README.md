@@ -6,6 +6,7 @@ A modern TypeScript dependency injection framework with factory-based providers 
 
 - **Factory-based providers**: No decorators or metadata needed
 - **Compile-time type safety**: Strong typing with TypeScript
+- **Destructuring support**: Access dependencies as object properties
 - **Multiple scopes**: Singleton, transient, and scoped lifetimes
 - **Zero dependencies**: Pure TypeScript implementation
 - **Simple API**: Easy to understand and use
@@ -19,7 +20,13 @@ npm install conduit
 ## Quick Start
 
 ```typescript
-import { createContainer, singleton, scoped, transient, ServiceDefinitions } from 'conduit';
+import {
+  createContainer,
+  singleton,
+  scoped,
+  transient,
+  ServiceDefinitions,
+} from 'conduit';
 
 // Define your services
 interface Logger {
@@ -68,11 +75,9 @@ const serviceDefinitions: ServiceDefinitions<{
 }> = {
   logger: singleton(() => new ConsoleLogger()),
   database: singleton(() => new PostgresDatabase()),
-  userService: scoped(container => 
-    new UserServiceImpl(
-      container.get('database'),
-      container.get('logger')
-    )
+  userService: scoped(
+    container =>
+      new UserServiceImpl(container.get('database'), container.get('logger'))
   ),
 };
 
@@ -82,11 +87,32 @@ const container = createContainer(serviceDefinitions);
 // Use services with full type safety
 const userService = container.get('userService'); // Type: UserService
 await userService.getUser('123');
+
+// NEW: Destructuring support!
+const { logger, database } = container;
+logger.log('Direct access via destructuring!');
+await database.query('SELECT * FROM products');
+
+// Functions can destructure what they need
+function processData({
+  userService,
+  logger,
+}: {
+  userService: UserService;
+  logger: Logger;
+}) {
+  logger.log('Processing data...');
+  return userService.getUser('123');
+}
+
+// Pass container directly - it works with destructuring!
+await processData(container);
 ```
 
 ## Service Scopes
 
 ### Singleton
+
 Services are created once and reused throughout the application lifetime:
 
 ```typescript
@@ -96,6 +122,7 @@ const services = {
 ```
 
 ### Transient
+
 New instances are created every time the service is requested:
 
 ```typescript
@@ -105,14 +132,59 @@ const services = {
 ```
 
 ### Scoped
+
 Services are created once per container scope (similar to singleton but can be reset):
 
 ```typescript
 const services = {
-  userRepository: scoped(container => 
-    new UserRepository(container.get('database'))
+  userRepository: scoped(
+    container => new UserRepository(container.get('database'))
   ),
 };
+```
+
+## Destructuring Support
+
+One of the key features of Conduit is the ability to destructure dependencies directly from the container, making it easy to pass exactly what functions need:
+
+```typescript
+// Traditional approach
+function processUser(container: Container) {
+  const userService = container.get('userService');
+  const logger = container.get('logger');
+  // ... use services
+}
+
+// NEW: Destructuring approach
+function processUser({
+  userService,
+  logger,
+}: {
+  userService: UserService;
+  logger: Logger;
+}) {
+  // ... use services directly
+}
+
+// Call with container - destructuring happens automatically!
+processUser(container);
+
+// You can also destructure inline
+const { userService, emailService } = container;
+await userService.getUser('123');
+await emailService.sendWelcomeEmail(user);
+```
+
+This makes functions more testable since you can easily mock just the dependencies you need:
+
+```typescript
+// Easy to test - just pass mock objects
+await processUser({
+  userService: mockUserService,
+  logger: mockLogger,
+});
+```
+
 ```
 
 ## API Reference
@@ -148,3 +220,4 @@ Retrieves a service from the container with full type safety.
 ## License
 
 MIT
+```
