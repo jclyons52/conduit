@@ -1,8 +1,8 @@
-import { ConduitConfig } from 'conduit';
+// import { ConduitConfig } from 'conduit';
 
-const config: ConduitConfig = {
+const config = {
   servicesFile: './src/services.ts',
-  outputDir: './generated',
+  outputDir: './src/generated',
   autoDiscoverImports: true,
   mode: 'container',
 
@@ -30,16 +30,16 @@ const config: ConduitConfig = {
   ],
 
   imports: {
-    ConsoleLogger: './services/logger',
-    FileLogger: './services/logger',
-    PostgresDatabase: './services/database',
-    RedisCache: './services/database',
-    SMTPEmailService: './services/email',
-    SendGridEmailService: './services/email',
-    DatabaseUserRepository: './services/user-repository',
-    UserServiceImpl: './services/user-service',
-    NotificationServiceImpl: './services/notification-service',
+    ConsoleLogger: '../services/logger',
+    FileLogger: '../services/logger',
+    PostgresDatabase: '../services/database',
+    RedisCache: '../services/database',
+    SMTPEmailService: '../services/email',
+    SendGridEmailService: '../services/email',
+    DatabaseUserRepository: '../services/user-repository',
+    UserServiceImpl: '../services/user-service',
+    NotificationServiceImpl: '../services/notification-service',
   },
 };
 
-export default config;
+module.exports = config;
