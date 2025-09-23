@@ -66,24 +66,10 @@ export class ContainerCompiler {
 
 `;
 
-    const imports = this.generateImports(result);
+    // The CodeGenerator already includes imports in the generated code
     const content = result.generatedCode;
 
-    return `${header}${imports}\n${content}`;
-  }
-
-  /**
-   * Generate import statements for the compiled code
-   */
-  private generateImports(_result: CompilationResult): string {
-    // In a real implementation, you'd analyze what imports are needed
-    // For now, we'll include common ones
-    const imports = [
-      '// Import your service classes here',
-      "// Example: import { ConsoleLogger, PostgresDatabase } from './services';",
-    ];
-
-    return imports.join('\n');
+    return `${header}${content}`;
   }
 
   /**

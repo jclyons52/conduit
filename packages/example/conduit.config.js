@@ -1,5 +1,3 @@
-// import { ConduitConfig } from 'conduit';
-
 const config = {
   servicesFile: './src/services.ts',
   outputDir: './src/generated',

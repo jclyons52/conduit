@@ -60,15 +60,15 @@ export class ConfigLoader {
     try {
       // Handle TypeScript config files
       if (configPath.endsWith('.ts')) {
-        // Try to register ts-node or tsx
+        // Try to register tsx
         try {
-          require('tsx/esm');
-        } catch {
+          require('tsx/cjs');
+        } catch (e1) {
           try {
             require('ts-node/register');
-          } catch {
+          } catch (e2) {
             throw new Error(
-              'TypeScript config files require tsx or ts-node to be installed'
+              'TypeScript config files require tsx or ts-node to be installed. Install with: npm install tsx'
             );
           }
         }
@@ -192,15 +192,15 @@ export class ConfigLoader {
     try {
       // Handle TypeScript service files
       if (servicesFile.endsWith('.ts')) {
-        // Try to register ts-node or tsx
+        // Try to register tsx
         try {
-          require('tsx/esm');
-        } catch {
+          require('tsx/cjs');
+        } catch (e1) {
           try {
             require('ts-node/register');
-          } catch {
+          } catch (e2) {
             throw new Error(
-              'TypeScript service files require tsx or ts-node to be installed'
+              'TypeScript service files require tsx or ts-node to be installed. Install with: npm install tsx'
             );
           }
         }
