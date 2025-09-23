@@ -1,5 +1,10 @@
 import { ServiceDefinitions } from '../types';
-import { CompiledService, CompilationResult, CompileConfig, CompilationMode, ImportStatement } from './types';
+import {
+  CompiledService,
+  CompilationResult,
+  CompileConfig,
+  ImportStatement,
+} from './types';
 import { DependencyAnalyzer } from './dependency-analyzer';
 
 /**
@@ -16,7 +21,7 @@ export class CodeGenerator {
     config: CompileConfig
   ): CompilationResult {
     const mode = config.mode || 'container';
-    
+
     // Analyze dependencies
     const requiredServices = this.analyzer.analyzeDependencies(
       serviceDefinitions,
@@ -46,9 +51,15 @@ export class CodeGenerator {
     );
 
     // Generate the final code based on mode
-    const generatedCode = mode === 'factories' 
-      ? this.generateFactoryCode(compiledServices, externalParams, imports)
-      : this.generateContainerCode(config.entryPoint, compiledServices, externalParams, imports);
+    const generatedCode =
+      mode === 'factories'
+        ? this.generateFactoryCode(compiledServices, externalParams, imports)
+        : this.generateContainerCode(
+            config.entryPoint,
+            compiledServices,
+            externalParams,
+            imports
+          );
 
     return {
       entryPoint: config.entryPoint,
@@ -63,7 +74,10 @@ export class CodeGenerator {
   /**
    * Generate import statements
    */
-  private generateImports(serviceClasses: Set<string>, imports: Record<string, string>): ImportStatement[] {
+  private generateImports(
+    serviceClasses: Set<string>,
+    imports: Record<string, string>
+  ): ImportStatement[] {
     const importGroups = new Map<string, string[]>();
 
     for (const className of serviceClasses) {
@@ -108,14 +122,19 @@ export class CodeGenerator {
       // Extract class name from factory
       const className = this.extractClassName(provider.factory.toString());
 
-      services.push({
+      const service: CompiledService = {
         key: serviceKey,
         dependencies,
         externalParams: serviceExternalParams,
         factoryCode,
         scope: provider.scope || 'scoped',
-        className,
-      });
+      };
+
+      if (className) {
+        service.className = className;
+      }
+
+      services.push(service);
     }
 
     // Sort services in dependency order
@@ -137,7 +156,10 @@ export class CodeGenerator {
     factoryCode: string,
     allExternalParams: string[]
   ): string[] {
-    return allExternalParams.filter(param => factoryCode.includes(`'${param}'`) || factoryCode.includes(`"${param}"`));
+    return allExternalParams.filter(
+      param =>
+        factoryCode.includes(`'${param}'`) || factoryCode.includes(`"${param}"`)
+    );
   }
 
   /**
@@ -149,6 +171,9 @@ export class CodeGenerator {
   ): string {
     let factoryCode = provider.factory.toString();
 
+    // Clean up module references from compiled JavaScript (e.g., database_1.PostgresDatabase -> PostgresDatabase)
+    factoryCode = this.cleanupModuleReferences(factoryCode);
+
     // Replace external parameters with parameter references
     for (const param of externalParams) {
       const escapedParam = param.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -158,6 +183,14 @@ export class CodeGenerator {
     }
 
     return factoryCode;
+  }
+
+  /**
+   * Clean up module references from compiled JavaScript code
+   */
+  private cleanupModuleReferences(code: string): string {
+    // Replace patterns like module_1.ClassName with just ClassName
+    return code.replace(/\w+_\d+\.(\w+)/g, '$1');
   }
 
   /**
@@ -224,9 +257,19 @@ export class CodeGenerator {
 
     const paramInterface = this.generateParameterInterface(externalParams);
 
-    const factories = services.map(service => {
-      return `export const ${service.key}Factory = ${service.factoryCode};`;
-    }).join('\n\n');
+    const factories = services
+      .map(service => {
+        // For factory mode, we need to wrap factories that use external params
+        let factoryCode = service.factoryCode;
+
+        if (service.externalParams.length > 0) {
+          // Factory uses external params, so it needs to be wrapped
+          factoryCode = `(params: ExternalParams) => ${factoryCode.replace(/^[^(]*\(/, '(')}`;
+        }
+
+        return `export const ${service.key}Factory = ${factoryCode};`;
+      })
+      .join('\n\n');
 
     return `${importStatements}\n\n${paramInterface}\n\n${factories}`;
   }
@@ -244,16 +287,20 @@ export class CodeGenerator {
       .map(imp => `import { ${imp.classNames.join(', ')} } from '${imp.path}';`)
       .join('\n');
 
-    const coreImports = "import { createContainer, ServiceDefinitions } from '../src';";
+    const coreImports =
+      "import { createContainer, ServiceDefinitions, singleton, scoped } from 'conduit';";
 
     const paramInterface = this.generateParameterInterface(externalParams);
 
-    const factoriesCode = services.map(service => {
-      const scope = service.scope === 'singleton' ? 'singleton' : 'scoped';
-      return `  ${service.key}: ${scope}(${service.factoryCode}),`;
-    }).join('\n');
+    const factoriesCode = services
+      .map(service => {
+        const scope = service.scope === 'singleton' ? 'singleton' : 'scoped';
+        return `  ${service.key}: ${scope}(${service.factoryCode}),`;
+      })
+      .join('\n');
 
-    const entryCapitalized = entryPoint.charAt(0).toUpperCase() + entryPoint.slice(1);
+    const entryCapitalized =
+      entryPoint.charAt(0).toUpperCase() + entryPoint.slice(1);
 
     return `${importStatements}
 ${coreImports}
@@ -285,134 +332,5 @@ ${factoriesCode}
       .join('\n');
 
     return `export interface ExternalParams {\n${properties}\n}`;
-  }
-}
-      .replace(/[^a-zA-Z0-9]/g, '_')
-      .replace(/^[0-9]/, '_$&')
-      .toLowerCase();
-  }
-
-  /**
-   * Sort services in dependency order using topological sort
-   */
-  private topologicalSort(services: CompiledService[]): CompiledService[] {
-    const result: CompiledService[] = [];
-    const visited = new Set<string>();
-    const visiting = new Set<string>();
-    const serviceMap = new Map(services.map(s => [s.key, s]));
-
-    const visit = (serviceKey: string) => {
-      if (visiting.has(serviceKey)) {
-        throw new Error(`Circular dependency detected involving ${serviceKey}`);
-      }
-      if (visited.has(serviceKey)) {
-        return;
-      }
-
-      visiting.add(serviceKey);
-      const service = serviceMap.get(serviceKey);
-      if (service) {
-        for (const dep of service.dependencies) {
-          visit(dep);
-        }
-        visited.add(serviceKey);
-        result.push(service);
-      }
-      visiting.delete(serviceKey);
-    };
-
-    for (const service of services) {
-      visit(service.key);
-    }
-
-    return result;
-  }
-
-  /**
-   * Generate the final compiled code
-   */
-  private generateCode(
-    entryPoint: string,
-    services: CompiledService[],
-    externalParams: string[]
-  ): string {
-    const paramInterface = this.generateParameterInterface(externalParams);
-    const factoryFunction = this.generateFactoryFunction(
-      entryPoint,
-      services,
-      externalParams
-    );
-
-    return `${paramInterface}\n\n${factoryFunction}`;
-  }
-
-  /**
-   * Generate TypeScript interface for external parameters
-   */
-  private generateParameterInterface(externalParams: string[]): string {
-    if (externalParams.length === 0) {
-      return 'export interface ExternalParams {}';
-    }
-
-    const paramProps = externalParams
-      .map(param => `  ${this.parameterize(param)}: string;`)
-      .join('\n');
-
-    return `export interface ExternalParams {\n${paramProps}\n}`;
-  }
-
-  /**
-   * Generate the main factory function
-   */
-  private generateFactoryFunction(
-    entryPoint: string,
-    services: CompiledService[],
-    externalParams: string[]
-  ): string {
-    const paramsArg = externalParams.length > 0 ? 'params: ExternalParams' : '';
-
-    const cacheDeclarations = services
-      .filter(s => s.scope !== 'transient')
-      .map(s => `  let cached_${s.key}: any = null;`)
-      .join('\n');
-
-    const serviceCreations = services
-      .map(service => {
-        const creation = service.factoryCode;
-
-        if (service.scope === 'transient') {
-          return `  const create_${service.key} = ${creation};`;
-        } else {
-          return `  const get_${service.key} = () => {
-    if (cached_${service.key} === null) {
-      cached_${service.key} = ${creation};
-    }
-    return cached_${service.key};
-  };`;
-        }
-      })
-      .join('\n\n');
-
-    const serviceObject = services
-      .map(service => {
-        const getter =
-          service.scope === 'transient'
-            ? `create_${service.key}()`
-            : `get_${service.key}()`;
-        return `    ${service.key}: ${getter},`;
-      })
-      .join('\n');
-
-    return `export function create${entryPoint.charAt(0).toUpperCase() + entryPoint.slice(1)}(${paramsArg}) {
-${cacheDeclarations}
-
-${serviceCreations}
-
-  const services = {
-${serviceObject}
-  };
-
-  return services.${entryPoint};
-}`;
   }
 }

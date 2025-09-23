@@ -17,7 +17,14 @@ export type {
   CompileConfig,
   CompilationResult,
   CompiledService,
+  CompilationMode,
 } from './compiler/types';
+
+// Re-export configuration and CLI
+export { ConfigLoader } from './compiler/config-loader';
+export { ImportDiscovery } from './compiler/import-discovery';
+export { ConduitCLI } from './cli';
+export type { ConduitConfig, EntryPointConfig } from './compiler/config-loader';
 
 // Create helper functions for common patterns
 import { ServiceDefinitions, Provider } from './types';

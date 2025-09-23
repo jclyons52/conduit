@@ -114,8 +114,8 @@ export class DependencyAnalyzer {
 
       const factoryCode = provider.factory.toString();
 
-      // Look for 'new ClassName(' patterns
-      const classPattern = /new\s+([A-Z][a-zA-Z0-9_]*)\s*\(/g;
+      // Look for 'new ClassName(' patterns, including module references like 'new module_1.ClassName('
+      const classPattern = /new\s+(?:\w+_\d+\.)?([A-Z][a-zA-Z0-9_]*)\s*\(/g;
       let match;
 
       while ((match = classPattern.exec(factoryCode)) !== null) {

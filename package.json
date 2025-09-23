@@ -1,18 +1,18 @@
 {
-  "name": "conduit",
+  "name": "conduit-workspace",
   "version": "1.0.0",
-  "description": "A modern TypeScript dependency injection framework with factory-based providers and compile-time type safety",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "description": "Conduit DI Framework - Workspace",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "build": "tsc",
-    "build:watch": "tsc --watch",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\" \"examples/**/*.ts\"",
-    "prepublishOnly": "npm run build",
-    "clean": "rimraf lib"
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "format": "prettier --write \"packages/**/*.ts\"",
+    "clean": "npm run clean --workspaces",
+    "example:build": "npm run build --workspace=packages/example",
+    "example:test": "npm run test --workspace=packages/example"
   },
   "keywords": [
     "dependency-injection",
@@ -50,5 +50,8 @@
   "bugs": {
     "url": "https://github.com/jclyons52/conduit/issues"
   },
-  "homepage": "https://github.com/jclyons52/conduit#readme"
+  "homepage": "https://github.com/jclyons52/conduit#readme",
+  "dependencies": {
+    "commander": "^14.0.1"
+  }
 }
