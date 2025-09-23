@@ -189,8 +189,8 @@ export class CodeGenerator {
    * Clean up module references from compiled JavaScript code
    */
   private cleanupModuleReferences(code: string): string {
-    // Replace patterns like module_1.ClassName with just ClassName
-    return code.replace(/\w+_\d+\.(\w+)/g, '$1');
+    // Replace patterns like module_1.ClassName or import_module2.ClassName with just ClassName
+    return code.replace(/(?:module_\d+|import_\w+\d*)\.([A-Z]\w+)/g, '$1');
   }
 
   /**
