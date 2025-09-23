@@ -73,11 +73,11 @@ describe('Container Compilation', () => {
     it('should extract external parameters', () => {
       const result = compileContainer(serviceDefinitions, 'userService');
 
-      expect(Object.values(result.externalParams).some(service => 
-        Object.keys(service).some(param => 
-          service[param] === 'string'
+      expect(
+        Object.values(result.externalParams).some(service =>
+          Object.keys(service).some(param => service[param] === 'string')
         )
-      )).toBe(true);
+      ).toBe(true);
       // Should have at least one service with external parameters
       expect(Object.keys(result.externalParams).length).toBeGreaterThan(0);
     });
@@ -114,7 +114,9 @@ describe('Container Compilation', () => {
     it('should replace external parameters in factory code', () => {
       const result = compileContainer(serviceDefinitions, 'userService');
 
-      expect(result.generatedCode).toContain('params.database.connectionString');
+      expect(result.generatedCode).toContain(
+        'params.database.connectionString'
+      );
     });
 
     it('should handle dependency injection in generated code', () => {
@@ -169,7 +171,9 @@ describe('Container Compilation', () => {
       const result = compileContainer(transientDefinitions, 'transientService');
 
       expect(result.generatedCode).toContain('createTransientService');
-      expect(result.generatedCode).toContain("container.get('transientService')");
+      expect(result.generatedCode).toContain(
+        "container.get('transientService')"
+      );
     });
   });
 });
