@@ -25,8 +25,8 @@ export interface CompiledService {
   key: string;
   /** Dependencies this service requires */
   dependencies: string[];
-  /** External parameters this service needs */
-  externalParams: string[];
+  /** External parameters this service needs (structured by parameter name) */
+  externalParams: Record<string, any>;
   /** Generated factory code */
   factoryCode: string;
   /** Service scope */
@@ -53,8 +53,8 @@ export interface CompilationResult {
   entryPoint: string;
   /** Compilation mode used */
   mode: CompilationMode;
-  /** All external parameters needed */
-  externalParams: string[];
+  /** All external parameters needed (structured by service) */
+  externalParams: Record<string, Record<string, any>>;
   /** Required imports for service classes */
   imports: ImportStatement[];
   /** Compiled services in dependency order */

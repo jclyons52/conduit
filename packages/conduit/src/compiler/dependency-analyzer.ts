@@ -100,6 +100,102 @@ export class DependencyAnalyzer {
   }
 
   /**
+   * Extract structured external parameters organized by service
+   */
+  public extractStructuredParameters<T extends Record<string, any>>(
+    serviceDefinitions: ServiceDefinitions<T>,
+    requiredServices: Set<string>
+  ): Record<string, Record<string, any>> {
+    const structuredParams: Record<string, Record<string, any>> = {};
+    const serviceNames = new Set(Object.keys(serviceDefinitions));
+
+    for (const serviceKey of requiredServices) {
+      const provider = serviceDefinitions[serviceKey];
+      if (!provider) continue;
+
+      const factoryCode = provider.factory.toString();
+
+      // Extract class name and constructor parameters
+      const constructorMatch = factoryCode.match(
+        /new\s+(?:(?:import_\w+\d*|module_\d+|[a-zA-Z0-9_$]+)\.)?([A-Z][a-zA-Z0-9_]*)\s*\((.*?)\)/
+      );
+
+      if (
+        !constructorMatch ||
+        !constructorMatch[1] ||
+        constructorMatch[2] === undefined
+      )
+        continue;
+
+      const className = constructorMatch[1];
+      const constructorArgs = constructorMatch[2];
+
+      // Parse constructor arguments to find external parameters
+      const serviceParams: Record<string, any> = {};
+      const stringLiterals = this.extractStringLiterals(constructorArgs);
+
+      for (const literal of stringLiterals) {
+        if (!serviceNames.has(literal) && this.isLikelyExternalParam(literal)) {
+          // Map the parameter to a meaningful name based on the class and value
+          const paramName = this.inferParameterName(className, literal);
+          serviceParams[paramName] = 'string'; // Default to string type
+        }
+      }
+
+      // Only add services that have external parameters
+      if (Object.keys(serviceParams).length > 0) {
+        structuredParams[serviceKey] = serviceParams;
+      }
+    }
+
+    return structuredParams;
+  }
+
+  /**
+   * Infer parameter name from class name and parameter value
+   */
+  private inferParameterName(className: string, paramValue: string): string {
+    // Common parameter mappings based on class names and values
+    const paramMappings: Record<string, Record<string, string>> = {
+      PostgresDatabase: {
+        'postgresql://': 'connectionString',
+      },
+      RedisCache: {
+        localhost: 'host',
+        'redis-secret-password': 'password',
+      },
+      SMTPEmailService: {
+        'smtp-api-key': 'apiKey',
+        'noreply@': 'fromAddress',
+      },
+      SendGridEmailService: {
+        'sendgrid-api-key': 'apiKey',
+      },
+    };
+
+    // Check for specific class mappings
+    if (paramMappings[className]) {
+      for (const [pattern, paramName] of Object.entries(
+        paramMappings[className]
+      )) {
+        if (paramValue.includes(pattern)) {
+          return paramName;
+        }
+      }
+    }
+
+    // Generic fallbacks based on content patterns
+    if (paramValue.includes('://')) return 'connectionString';
+    if (paramValue.includes('@')) return 'fromAddress';
+    if (paramValue.includes('api-key')) return 'apiKey';
+    if (paramValue.includes('password')) return 'password';
+    if (paramValue.includes(':') && /:\d+/.test(paramValue)) return 'host';
+
+    // Default fallback
+    return 'config';
+  }
+
+  /**
    * Extract service class names from factory functions
    */
   public extractServiceClasses<T extends Record<string, any>>(

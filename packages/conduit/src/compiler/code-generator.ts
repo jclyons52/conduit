@@ -28,8 +28,8 @@ export class CodeGenerator {
       config.entryPoint
     );
 
-    // Extract external parameters (only real config, not service names)
-    const externalParams = this.analyzer.extractExternalParameters(
+    // Extract structured external parameters (organized by service)
+    const structuredParams = this.analyzer.extractStructuredParameters(
       serviceDefinitions,
       requiredServices
     );
@@ -47,24 +47,24 @@ export class CodeGenerator {
     const compiledServices = this.generateCompiledServices(
       serviceDefinitions,
       requiredServices,
-      externalParams
+      structuredParams
     );
 
     // Generate the final code based on mode
     const generatedCode =
       mode === 'factories'
-        ? this.generateFactoryCode(compiledServices, externalParams, imports)
+        ? this.generateFactoryCode(compiledServices, structuredParams, imports)
         : this.generateContainerCode(
             config.entryPoint,
             compiledServices,
-            externalParams,
+            structuredParams,
             imports
           );
 
     return {
       entryPoint: config.entryPoint,
       mode,
-      externalParams,
+      externalParams: structuredParams,
       imports,
       services: compiledServices,
       generatedCode,
@@ -100,7 +100,7 @@ export class CodeGenerator {
   private generateCompiledServices<T extends Record<string, any>>(
     serviceDefinitions: ServiceDefinitions<T>,
     requiredServices: Set<string>,
-    externalParams: string[]
+    structuredParams: Record<string, Record<string, any>>
   ): CompiledService[] {
     const services: CompiledService[] = [];
 
@@ -109,13 +109,11 @@ export class CodeGenerator {
       if (!provider) continue;
 
       const dependencies = this.analyzer['extractDependencies'](provider);
-      const serviceExternalParams = this.getServiceExternalParams(
-        provider.factory.toString(),
-        externalParams
-      );
+      const serviceExternalParams = structuredParams[serviceKey] || {};
 
       const factoryCode = this.generateServiceFactory(
         provider,
+        serviceKey,
         serviceExternalParams
       );
 
@@ -150,39 +148,108 @@ export class CodeGenerator {
   }
 
   /**
-   * Get external parameters used by a specific service
-   */
-  private getServiceExternalParams(
-    factoryCode: string,
-    allExternalParams: string[]
-  ): string[] {
-    return allExternalParams.filter(
-      param =>
-        factoryCode.includes(`'${param}'`) || factoryCode.includes(`"${param}"`)
-    );
-  }
-
-  /**
    * Generate factory code for a single service (cleaned up)
    */
   private generateServiceFactory(
     provider: any,
-    externalParams: string[]
+    serviceKey: string,
+    serviceParams: Record<string, any>
   ): string {
     let factoryCode = provider.factory.toString();
 
     // Clean up module references from compiled JavaScript (e.g., database_1.PostgresDatabase -> PostgresDatabase)
     factoryCode = this.cleanupModuleReferences(factoryCode);
 
-    // Replace external parameters with parameter references
-    for (const param of externalParams) {
-      const escapedParam = param.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const pattern = new RegExp(`(['"\`])${escapedParam}\\1`, 'g');
-      const paramName = this.parameterize(param);
-      factoryCode = factoryCode.replace(pattern, `params.${paramName}`);
+    // Replace external parameters with structured parameter references
+    for (const [paramName, _paramType] of Object.entries(serviceParams)) {
+      // Find the original parameter value that maps to this parameter name
+      const originalValue = this.findOriginalParameterValue(
+        factoryCode,
+        paramName
+      );
+      if (originalValue) {
+        const escapedValue = originalValue.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          '\\$&'
+        );
+        const pattern = new RegExp(`(['"\`])${escapedValue}\\1`, 'g');
+        // Use structured parameter reference: params.serviceName.paramName
+        factoryCode = factoryCode.replace(
+          pattern,
+          `params.${serviceKey}.${paramName}`
+        );
+      }
     }
 
     return factoryCode;
+  }
+
+  /**
+   * Find the original parameter value in factory code that corresponds to a parameter name
+   */
+  private findOriginalParameterValue(
+    factoryCode: string,
+    paramName: string
+  ): string | null {
+    // This is a reverse mapping - we need to find which string literal corresponds to this parameter name
+    // For now, we'll use a simple heuristic based on the parameter name
+    const stringLiterals = this.analyzer['extractStringLiterals'](factoryCode);
+
+    for (const literal of stringLiterals) {
+      if (this.analyzer['isLikelyExternalParam'](literal)) {
+        // Check if this literal would generate the same parameter name
+        const inferredName = this.inferParameterName('', literal);
+        if (inferredName === paramName) {
+          return literal;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Infer parameter name from parameter value (moved from analyzer for consistency)
+   */
+  private inferParameterName(className: string, paramValue: string): string {
+    // Common parameter mappings based on class names and values
+    const paramMappings: Record<string, Record<string, string>> = {
+      PostgresDatabase: {
+        'postgresql://': 'connectionString',
+      },
+      RedisCache: {
+        localhost: 'host',
+        'redis-secret-password': 'password',
+      },
+      SMTPEmailService: {
+        'smtp-api-key': 'apiKey',
+        'noreply@': 'fromAddress',
+      },
+      SendGridEmailService: {
+        'sendgrid-api-key': 'apiKey',
+      },
+    };
+
+    // Check for specific class mappings
+    if (paramMappings[className]) {
+      for (const [pattern, paramName] of Object.entries(
+        paramMappings[className]
+      )) {
+        if (paramValue.includes(pattern)) {
+          return paramName;
+        }
+      }
+    }
+
+    // Generic fallbacks based on content patterns
+    if (paramValue.includes('://')) return 'connectionString';
+    if (paramValue.includes('@')) return 'fromAddress';
+    if (paramValue.includes('api-key')) return 'apiKey';
+    if (paramValue.includes('password')) return 'password';
+    if (paramValue.includes(':') && /:\d+/.test(paramValue)) return 'host';
+
+    // Default fallback
+    return 'config';
   }
 
   /**
@@ -191,17 +258,6 @@ export class CodeGenerator {
   private cleanupModuleReferences(code: string): string {
     // Replace patterns like module_1.ClassName or import_module2.ClassName with just ClassName
     return code.replace(/(?:module_\d+|import_\w+\d*)\.([A-Z]\w+)/g, '$1');
-  }
-
-  /**
-   * Convert a string literal to a parameter name
-   */
-  private parameterize(literal: string): string {
-    return literal
-      .toLowerCase()
-      .replace(/[^a-zA-Z0-9]/g, '_')
-      .replace(/^[0-9]/, '_$&')
-      .replace(/_+/g, '_');
   }
 
   /**
@@ -248,21 +304,21 @@ export class CodeGenerator {
    */
   private generateFactoryCode(
     services: CompiledService[],
-    externalParams: string[],
+    structuredParams: Record<string, Record<string, any>>,
     imports: ImportStatement[]
   ): string {
     const importStatements = imports
       .map(imp => `import { ${imp.classNames.join(', ')} } from '${imp.path}';`)
       .join('\n');
 
-    const paramInterface = this.generateParameterInterface(externalParams);
+    const paramInterface = this.generateParameterInterface(structuredParams);
 
     const factories = services
       .map(service => {
         // For factory mode, we need to wrap factories that use external params
         let factoryCode = service.factoryCode;
 
-        if (service.externalParams.length > 0) {
+        if (Object.keys(service.externalParams).length > 0) {
           // Factory uses external params, so it needs to be wrapped
           factoryCode = `(params: ExternalParams) => ${factoryCode.replace(/^[^(]*\(/, '(')}`;
         }
@@ -280,7 +336,7 @@ export class CodeGenerator {
   private generateContainerCode(
     entryPoint: string,
     services: CompiledService[],
-    externalParams: string[],
+    structuredParams: Record<string, Record<string, any>>,
     imports: ImportStatement[]
   ): string {
     const importStatements = imports
@@ -290,7 +346,7 @@ export class CodeGenerator {
     const coreImports =
       "import { createContainer, ServiceDefinitions, singleton, scoped } from 'conduit';";
 
-    const paramInterface = this.generateParameterInterface(externalParams);
+    const paramInterface = this.generateParameterInterface(structuredParams);
 
     const factoriesCode = services
       .map(service => {
@@ -320,17 +376,24 @@ ${factoriesCode}
   }
 
   /**
-   * Generate TypeScript interface for external parameters
+   * Generate TypeScript interface for structured external parameters
    */
-  private generateParameterInterface(externalParams: string[]): string {
-    if (externalParams.length === 0) {
+  private generateParameterInterface(
+    structuredParams: Record<string, Record<string, any>>
+  ): string {
+    if (Object.keys(structuredParams).length === 0) {
       return 'export interface ExternalParams {}';
     }
 
-    const properties = externalParams
-      .map(param => `  ${this.parameterize(param)}: string;`)
+    const serviceProperties = Object.entries(structuredParams)
+      .map(([serviceName, params]) => {
+        const paramProperties = Object.entries(params)
+          .map(([paramName, _paramType]) => `    ${paramName}: string;`)
+          .join('\n');
+        return `  ${serviceName}: {\n${paramProperties}\n  };`;
+      })
       .join('\n');
 
-    return `export interface ExternalParams {\n${properties}\n}`;
+    return `export interface ExternalParams {\n${serviceProperties}\n}`;
   }
 }

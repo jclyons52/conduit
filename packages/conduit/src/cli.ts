@@ -115,7 +115,9 @@ class ConduitCLI {
 
         console.log(`   ✅ Mode: ${result.mode}`);
         console.log(`   📊 Services: ${result.services.length}`);
-        console.log(`   🔧 External params: ${result.externalParams.length}`);
+        console.log(
+          `   🔧 External params: ${Object.keys(result.externalParams).length}`
+        );
         console.log(`   📁 Output: ${entryPointConfig.outputFile}`);
 
         if (options.dryRun) {
@@ -205,7 +207,9 @@ class ConduitCLI {
       console.log('=' + '='.repeat(30));
       console.log(`🎯 Entry point: ${entryPoint}`);
       console.log(`📦 Required services: ${result.services.length}`);
-      console.log(`🔧 External parameters: ${result.externalParams.length}`);
+      console.log(
+        `🔧 External parameters: ${Object.keys(result.externalParams).length}`
+      );
       console.log(`📁 Import groups: ${result.imports.length}`);
 
       console.log('\n🏗️  Services in dependency order:');
@@ -216,11 +220,16 @@ class ConduitCLI {
         }
       });
 
-      if (result.externalParams.length > 0) {
+      if (Object.keys(result.externalParams).length > 0) {
         console.log('\n🔧 External parameters:');
-        result.externalParams.forEach(param => {
-          console.log(`  - ${param}`);
-        });
+        Object.entries(result.externalParams).forEach(
+          ([serviceName, params]) => {
+            console.log(`  - ${serviceName}:`);
+            Object.entries(params).forEach(([paramName, paramType]) => {
+              console.log(`    • ${paramName}: ${paramType}`);
+            });
+          }
+        );
       }
     } catch (error) {
       console.error('❌ Analysis failed:', error);
