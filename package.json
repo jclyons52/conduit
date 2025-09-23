@@ -5,7 +5,8 @@
   "private": true,
   "packageManager": "npm@10.0.0",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "build": "turbo build",
@@ -17,6 +18,8 @@
     "dev": "turbo dev",
     "build:conduit": "turbo build --filter=conduit",
     "build:example": "turbo build --filter=conduit-example",
+    "build:docs": "turbo build --filter=conduit-docs",
+    "dev:docs": "turbo dev --filter=conduit-docs",
     "test:example": "turbo test --filter=conduit-example"
   },
   "keywords": [

@@ -9,6 +9,14 @@ lib/
 dist/
 build/
 
+# Generated code
+**/generated/
+**/src/generated/
+
+# VitePress
+**/.vitepress/cache/
+**/.vitepress/dist/
+
 # Coverage reports
 coverage/
 *.lcov
