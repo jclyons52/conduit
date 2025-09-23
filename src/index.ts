@@ -7,6 +7,18 @@ export { Container } from './container';
 // Re-export errors
 export { ServiceNotFoundError } from './errors';
 
+// Re-export compiler
+export {
+  ContainerCompiler,
+  compileContainer,
+  previewCompilation,
+} from './compiler';
+export type {
+  CompileConfig,
+  CompilationResult,
+  CompiledService,
+} from './compiler/types';
+
 // Create helper functions for common patterns
 import { ServiceDefinitions, Provider } from './types';
 import { Container } from './container';

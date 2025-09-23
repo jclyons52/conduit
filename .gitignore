@@ -90,3 +90,5 @@ typings/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+generated-functions/
