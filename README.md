@@ -1,20 +1,54 @@
 # Conduit
 
-A modern TypeScript dependency injection framework with factory-based providers and compile-time type safety.
+A modern TypeScript dependency injection framework with factory-based providers, compile-time type safety, and revolutionary serverless optimization through tree-shaking compilation.
 
 ## Features
 
 - **Factory-based providers**: No decorators or metadata needed
 - **Compile-time type safety**: Strong typing with TypeScript
+- **Tree-shaking compilation**: Generate optimized containers for serverless deployment
 - **Destructuring support**: Access dependencies as object properties
 - **Multiple scopes**: Singleton, transient, and scoped lifetimes
-- **Zero dependencies**: Pure TypeScript implementation
-- **Simple API**: Easy to understand and use
+- **CLI tooling**: Powerful command-line tools for analysis and compilation
+- **Zero runtime dependencies**: Pure TypeScript implementation
+- **Monorepo workspace**: Organized as a proper workspace with example project
+
+## Project Structure
+
+This is a monorepo workspace with the following packages:
+
+- **`packages/conduit/`** - Core dependency injection framework
+- **`packages/example/`** - Complete example workspace demonstrating usage
 
 ## Installation
 
 ```bash
-npm install conduit
+# Install the workspace
+npm install
+
+# Build the conduit package
+cd packages/conduit && npm run build
+
+# Try the example
+cd packages/example && npm run build
+```
+
+## CLI Usage
+
+Conduit includes powerful CLI tools for analyzing and compiling your dependency injection containers:
+
+```bash
+# Compile optimized containers
+npx conduit compile
+
+# List all available services
+npx conduit list
+
+# Analyze service dependencies
+npx conduit analyze userService
+
+# Initialize a new project
+npx conduit init
 ```
 
 ## Quick Start
@@ -107,6 +141,94 @@ function processData({
 
 // Pass container directly - it works with destructuring!
 await processData(container);
+```
+
+## Serverless Optimization & Compilation
+
+Conduit includes a revolutionary compilation system that generates tree-shaken, optimized containers perfect for serverless deployments. This can reduce bundle sizes by up to 89%!
+
+### Configuration
+
+Create a `conduit.config.js` file:
+
+```javascript
+const config = {
+  servicesFile: './src/services.ts',
+  outputDir: './generated',
+  autoDiscoverImports: true,
+  mode: 'container',
+
+  entryPoints: [
+    {
+      entryPoint: 'userService',
+      outputFile: 'user-service-container.ts',
+      mode: 'container',
+    },
+    {
+      entryPoint: 'emailService',
+      outputFile: 'email-factories.ts',
+      mode: 'factories',
+    },
+  ],
+
+  imports: {
+    UserService: './services/user-service',
+    EmailService: './services/email-service',
+    // ... auto-discovered if autoDiscoverImports: true
+  },
+};
+
+module.exports = config;
+```
+
+### Generated Output
+
+The compiler generates optimized containers:
+
+```typescript
+// Generated: user-service-container.ts
+import { UserService } from './services/user-service';
+import { Logger } from './services/logger';
+// ... only required imports
+
+export interface ExternalParams {
+  database_url: string;
+  api_key: string;
+}
+
+export function createUserService(params: ExternalParams) {
+  const serviceDefinitions = {
+    // Only services required by userService
+    logger: scoped(() => new Logger()),
+    database: scoped(() => new Database(params.database_url)),
+    userService: scoped(
+      container =>
+        new UserService(container.get('database'), container.get('logger'))
+    ),
+  };
+
+  const container = createContainer(serviceDefinitions);
+  return container.get('userService');
+}
+```
+
+### CLI Commands
+
+```bash
+# Compile all entry points
+npx conduit compile
+
+# Dry run compilation
+npx conduit compile --dry-run
+
+# List all services
+npx conduit list
+
+# Analyze dependencies for a service
+npx conduit analyze userService
+
+# Initialize new project
+npx conduit init
 ```
 
 ## Service Scopes
