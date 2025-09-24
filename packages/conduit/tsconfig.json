@@ -13,8 +13,6 @@
     "declarationMap": true,
     "sourceMap": true,
     "removeComments": false,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,

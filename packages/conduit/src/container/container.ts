@@ -61,8 +61,11 @@ export class Container<TDeps extends Record<string, any>>
     key: K,
     provider: Provider<TDeps[K]>
   ): TDeps[K] {
-    if (provider.scope === 'transient') {
-      return provider.factory(this);
+    const wrappedProvider =
+      typeof provider === 'function' ? { factory: provider } : provider;
+
+    if (wrappedProvider.scope === 'transient') {
+      return wrappedProvider.factory(this);
     }
 
     // Default to scoped (cached) behavior
@@ -70,7 +73,7 @@ export class Container<TDeps extends Record<string, any>>
       return this.cache.get(key);
     }
 
-    const result = provider.factory(this);
+    const result = wrappedProvider.factory(this);
     this.cache.set(key, result);
     return result;
   }

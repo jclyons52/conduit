@@ -17,8 +17,7 @@ import { DatabaseUserRepository } from './services/user-repository';
 import { UserServiceImpl } from './services/user-service';
 import { NotificationServiceImpl } from './services/notification-service';
 
-// Complete application service definitions
-export const serviceDefinitions: ServiceDefinitions<{
+type Deps = {
   logger: Logger;
   fileLogger: Logger;
   database: Database;
@@ -28,7 +27,10 @@ export const serviceDefinitions: ServiceDefinitions<{
   userRepository: UserRepository;
   userService: UserService;
   notificationService: NotificationService;
-}> = {
+};
+
+// Complete application service definitions
+export const serviceDefinitions: ServiceDefinitions<Deps> = {
   // Logging services
   logger: singleton(() => new ConsoleLogger('[APP]')),
 
@@ -54,32 +56,14 @@ export const serviceDefinitions: ServiceDefinitions<{
   ),
 
   // Repository layer
-  userRepository: scoped(
-    container =>
-      new DatabaseUserRepository(
-        container.get('database'),
-        container.get('logger')
-      )
-  ),
-
+  userRepository: ({ database, logger }) =>
+    new DatabaseUserRepository(database, logger),
   // Business logic layer
-  userService: scoped(
-    container =>
-      new UserServiceImpl(
-        container.get('userRepository'),
-        container.get('emailService'),
-        container.get('logger')
-      )
-  ),
-
+  userService: ({ userRepository, emailService, logger }) =>
+    new UserServiceImpl(userRepository, emailService, logger),
   // High-level services
-  notificationService: scoped(
-    container =>
-      new NotificationServiceImpl(
-        container.get('userService'),
-        container.get('logger')
-      )
-  ),
+  notificationService: ({ userService, logger }) =>
+    new NotificationServiceImpl(userService, logger),
 };
 
 // Export types for compilation

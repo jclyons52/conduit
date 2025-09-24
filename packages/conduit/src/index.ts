@@ -27,7 +27,7 @@ export { ConduitCLI } from './cli';
 export type { ConduitConfig, EntryPointConfig } from './compiler/config-loader';
 
 // Create helper functions for common patterns
-import { ServiceDefinitions, Provider } from './types';
+import { ServiceDefinitions, Provider, ProxiedContainer } from './types';
 import { Container } from './container';
 
 /**
@@ -43,7 +43,7 @@ export function createContainer<T extends Record<string, any>>(
  * Helper to create a scoped provider
  */
 export function scoped<T, TServices extends Record<string, any> = any>(
-  factory: (container: Container<TServices>) => T
+  factory: (container: ProxiedContainer<TServices>) => T
 ): Provider<T> {
   return { scope: 'scoped', factory };
 }
@@ -52,7 +52,7 @@ export function scoped<T, TServices extends Record<string, any> = any>(
  * Helper to create a transient provider
  */
 export function transient<T, TServices extends Record<string, any> = any>(
-  factory: (container: Container<TServices>) => T
+  factory: (container: ProxiedContainer<TServices>) => T
 ): Provider<T> {
   return { scope: 'transient', factory };
 }
@@ -61,7 +61,7 @@ export function transient<T, TServices extends Record<string, any> = any>(
  * Helper to create a singleton provider (same as scoped)
  */
 export function singleton<T, TServices extends Record<string, any> = any>(
-  factory: (container: Container<TServices>) => T
+  factory: (container: ProxiedContainer<TServices>) => T
 ): Provider<T> {
   return { scope: 'scoped', factory };
 }

@@ -1,4 +1,4 @@
-import { ServiceDefinitions } from '../types';
+import { ServiceDefinitions, Provider, getProviderFactoryCode } from '../types';
 import {
   CompiledService,
   CompilationResult,
@@ -118,14 +118,17 @@ export class CodeGenerator {
       );
 
       // Extract class name from factory
-      const className = this.extractClassName(provider.factory.toString());
+      const className = this.extractClassName(getProviderFactoryCode(provider));
 
       const service: CompiledService = {
         key: serviceKey,
         dependencies,
         externalParams: serviceExternalParams,
         factoryCode,
-        scope: provider.scope || 'scoped',
+        scope:
+          typeof provider === 'function'
+            ? 'scoped'
+            : provider.scope || 'scoped',
       };
 
       if (className) {
@@ -151,11 +154,11 @@ export class CodeGenerator {
    * Generate factory code for a single service (cleaned up)
    */
   private generateServiceFactory(
-    provider: any,
+    provider: Provider<any>,
     serviceKey: string,
     serviceParams: Record<string, any>
   ): string {
-    let factoryCode = provider.factory.toString();
+    let factoryCode = getProviderFactoryCode(provider);
 
     // Clean up module references from compiled JavaScript (e.g., database_1.PostgresDatabase -> PostgresDatabase)
     factoryCode = this.cleanupModuleReferences(factoryCode);

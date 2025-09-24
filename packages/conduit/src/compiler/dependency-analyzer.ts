@@ -1,4 +1,4 @@
-import { ServiceDefinitions, Provider } from '../types';
+import { ServiceDefinitions, Provider, getProviderFactoryCode } from '../types';
 
 /**
  * Analyzes dependency graphs and identifies required services for tree-shaking
@@ -52,7 +52,7 @@ export class DependencyAnalyzer {
    * Extract dependencies from a factory function by analyzing its code
    */
   private extractDependencies(provider: Provider<any>): string[] {
-    const factoryCode = provider.factory.toString();
+    const factoryCode = getProviderFactoryCode(provider);
     const dependencies: string[] = [];
 
     // Look for container.get('serviceName') patterns
@@ -63,6 +63,19 @@ export class DependencyAnalyzer {
       if (match[1]) {
         dependencies.push(match[1]);
       }
+    }
+
+    // Also look for destructuring patterns: ({ database, logger }) =>
+    const destructuringPattern = /\(\s*\{\s*([^}]+)\s*\}\s*\)/;
+    const destructuringMatch = factoryCode.match(destructuringPattern);
+
+    if (destructuringMatch && destructuringMatch[1]) {
+      const destructuredServices = destructuringMatch[1]
+        .split(',')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
+      dependencies.push(...destructuredServices);
     }
 
     return dependencies;
@@ -83,7 +96,7 @@ export class DependencyAnalyzer {
       const provider = serviceDefinitions[serviceKey];
       if (!provider) continue;
 
-      const factoryCode = provider.factory.toString();
+      const factoryCode = getProviderFactoryCode(provider);
 
       // Look for string literals that look like external parameters
       const stringLiterals = this.extractStringLiterals(factoryCode);
@@ -113,7 +126,7 @@ export class DependencyAnalyzer {
       const provider = serviceDefinitions[serviceKey];
       if (!provider) continue;
 
-      const factoryCode = provider.factory.toString();
+      const factoryCode = getProviderFactoryCode(provider);
 
       // Extract class name and constructor parameters
       const constructorMatch = factoryCode.match(
@@ -208,7 +221,7 @@ export class DependencyAnalyzer {
       const provider = serviceDefinitions[serviceKey];
       if (!provider) continue;
 
-      const factoryCode = provider.factory.toString();
+      const factoryCode = getProviderFactoryCode(provider);
 
       // Look for 'new ClassName(' patterns, including:
       // - Direct: new ConsoleLogger(
