@@ -5,6 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ContainerCompiler } from './compiler';
 import { ConfigLoader } from './compiler/config-loader';
+import { TypeDrivenCodeGenerator } from './compiler/type-driven-code-generator';
 
 /**
  * Conduit CLI - Command line interface for the Conduit DI compiler
@@ -54,6 +55,21 @@ class ConduitCLI {
       .description('Analyze dependencies for a specific entry point')
       .option('-c, --config <path>', 'Path to conduit config file')
       .action(this.handleAnalyze.bind(this));
+
+    // Type-driven generate command
+    this.program
+      .command('generate-types')
+      .description(
+        'Generate type-driven containers based on ServiceDefinitions'
+      )
+      .option('-c, --config <path>', 'Path to conduit config file')
+      .option(
+        '-s, --services <path>',
+        'Path to services file containing AppServices type'
+      )
+      .option('-o, --output <file>', 'Output file name')
+      .option('--dry-run', 'Show what would be generated without writing files')
+      .action(this.handleGenerateTypes.bind(this));
   }
 
   /**
@@ -288,6 +304,67 @@ const config: ConduitConfig = {
 
 export default config;
 `;
+  }
+
+  /**
+   * Handle the generate-types command
+   */
+  private async handleGenerateTypes(options: any): Promise<void> {
+    try {
+      console.log('🚀 Starting type-driven generation...\n');
+
+      // Load configuration
+      const configPath = this.findConfigPath(options.config);
+      const config = await this.configLoader.loadConfig(configPath);
+
+      // Find services file path
+      const servicesPath =
+        options.services || path.join(process.cwd(), 'src', 'services.ts');
+      if (!fs.existsSync(servicesPath)) {
+        throw new Error(`Services file not found: ${servicesPath}`);
+      }
+
+      console.log(`📁 Using services file: ${servicesPath}`);
+
+      // Create type-driven generator
+      const generator = new TypeDrivenCodeGenerator();
+
+      config.entryPoints.forEach(ep => {
+        // Generate code based on AppServices type
+        const result = generator.generateFromServiceDefinitions(
+          ep.entryPoint,
+          servicesPath
+        );
+        console.log('✅ Type analysis completed');
+        console.log('📝 Generated interfaces and container function');
+
+        if (options.dryRun) {
+          console.log('\n📄 Generated code preview:');
+          console.log('=' + '='.repeat(50));
+          console.log(result.generatedCode);
+          console.log('=' + '='.repeat(50));
+        } else {
+          // Write to output file
+          const outputPath = path.join(config.outputDir, ep.outputFile);
+
+          console.log(`📁 Writing to: ${outputPath}`);
+
+          // Ensure output directory exists
+          const outputDir = path.dirname(outputPath);
+          if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+          }
+
+          fs.writeFileSync(outputPath, result.generatedCode, 'utf8');
+          console.log(`📁 Generated: ${outputPath}`);
+        }
+
+        console.log('✨ Type-driven generation completed successfully!');
+      });
+    } catch (error) {
+      console.error('❌ Type-driven generation failed:', error);
+      process.exit(1);
+    }
   }
 
   /**

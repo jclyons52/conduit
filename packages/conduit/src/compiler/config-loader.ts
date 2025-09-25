@@ -26,6 +26,8 @@ export interface EntryPointConfig {
   /** Service key to use as entry point */
   entryPoint: string;
 
+  typeName: string;
+
   /** Output filename */
   outputFile: string;
 

@@ -1,17 +1,8 @@
+import { Logger } from './logger';
 import { UserRepository } from './user-repository';
 import { EmailService } from './email';
-import { Logger } from './logger';
 
-// User service interface and implementation
-export interface UserService {
-  getUser(id: string): Promise<any>;
-  getUserByEmail(email: string): Promise<any>;
-  createUser(userData: any): Promise<any>;
-  updateUser(id: string, userData: any): Promise<any>;
-  deleteUser(id: string): Promise<void>;
-}
-
-export class UserServiceImpl implements UserService {
+export class UserService {
   constructor(
     private userRepository: UserRepository,
     private emailService: EmailService,

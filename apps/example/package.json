@@ -4,7 +4,7 @@
   "private": true,
   "description": "Example workspace showing Conduit DI compiler usage",
   "scripts": {
-    "build": "conduit compile",
+    "build": "conduit generate-types",
     "build:dry": "conduit compile --dry-run",
     "list": "conduit list",
     "analyze:user": "conduit analyze userService",
@@ -13,7 +13,7 @@
     "clean": "rimraf src/generated"
   },
   "dependencies": {
-    "conduit": "file:../conduit"
+    "conduit": "file:../../packages/conduit"
   },
   "devDependencies": {
     "rimraf": "^6.0.1",

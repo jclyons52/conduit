@@ -1,16 +1,7 @@
 import { Database } from './database';
 import { Logger } from './logger';
 
-// User repository interface and implementation
-export interface UserRepository {
-  findById(id: string): Promise<any>;
-  findByEmail(email: string): Promise<any>;
-  create(user: any): Promise<any>;
-  update(id: string, user: any): Promise<any>;
-  delete(id: string): Promise<void>;
-}
-
-export class DatabaseUserRepository implements UserRepository {
+export class UserRepository {
   constructor(
     private database: Database,
     private logger: Logger
