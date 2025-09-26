@@ -2,9 +2,9 @@ import { DependencyNode } from './buildDependencyTree';
 
 function collectImports(
   nodes: DependencyNode[]
-): { name: string; path: string }[] {
+): { name: string; path: string; typeName: string | undefined }[] {
   return nodes
-    .map(n => ({ name: n.name, path: n.importPath! }))
+    .map(n => ({ name: n.name, typeName: n.typeName, path: n.importPath! }))
     .filter(n => n.path);
 }
 
@@ -33,10 +33,10 @@ function buildDepsConfig(nodes: DependencyNode[]): string {
 function buildFactoryDeps(nodes: DependencyNode[]): string {
   const services = nodes.flatMap(node => {
     if (node.kind === 'class' || node.kind === 'function') {
-      return [`${node.name}?: ${capitalize(node.name)};`];
+      return [`${node.name}?: ${getName(node)};`];
     }
     if (node.kind === 'interface') {
-      return [`${node.name}: ${capitalize(node.name)};`];
+      return [`${node.name}: ${getName(node)};`];
     }
     return [];
   });
@@ -61,22 +61,29 @@ function renderFactory(node: DependencyNode): string | null {
       ?.filter(c => c.kind !== 'primitive')
       .map(c => c.name)
       .join(', ')} }) => {
-        return new ${capitalize(node.name)}(${args}); ${node.circular ? ' // Note: Circular dependency detected' : ''}
+        return new ${getName(node)}(${args}); ${node.circular ? ' // Note: Circular dependency detected' : ''}
       }`;
   }
   return null;
 }
 
 function buildServiceDefinitions(nodes: DependencyNode[]): string {
-  const factories = nodes
-    .map(n => renderFactory(n))
-    .filter(Boolean)
-    .join(',\n');
+  const factories = nodes.map(n => renderFactory(n)).filter(Boolean);
 
   return `const serviceDefinitions: ServiceDefinitions<Required<FactoryDeps>> = {
-${factories},
+${factories.length > 0 ? factories.join(',\n') + ',\n' : ''}
 ...factories
 };`;
+}
+
+function getName({
+  name,
+  typeName,
+}: {
+  name: string;
+  typeName?: string;
+}): string {
+  return typeName ? typeName : capitalize(name);
 }
 
 export function generateContainerCode(
@@ -85,7 +92,7 @@ export function generateContainerCode(
   entryFilePath: string
 ): string {
   const imports = collectImports(deps)
-    .map(i => `import { ${capitalize(i.name)} } from "${i.path}";`)
+    .map(i => `import { ${getName(i)} } from "${i.path}";`)
     .join('\n');
 
   const depsConfig = buildDepsConfig(deps);
@@ -96,7 +103,7 @@ export function generateContainerCode(
 import {
   createContainer,
   ServiceDefinitions,
-} from 'conduit';
+} from 'conduit-di';
 import { ${capitalize(appName)} } from '${entryFilePath}';
 
 ${imports}

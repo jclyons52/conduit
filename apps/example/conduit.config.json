@@ -1,0 +1,10 @@
+{
+  "tsConfigPath": "./tsconfig.json",
+  "entryPoints": [
+    {
+      "entryPoint": "./src/app-dependencies.ts",
+      "typeName": "AppDependencies",
+      "outputFile": "./src/generated/container.ts"
+    }
+  ]
+}

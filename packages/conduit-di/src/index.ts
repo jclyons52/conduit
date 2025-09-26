@@ -4,14 +4,6 @@ export type { Scope, Provider, ServiceDefinitions, IContainer } from './types';
 // Re-export container
 export { Container } from './container';
 
-// Re-export errors
-export { ServiceNotFoundError } from './errors';
-
-// Re-export configuration and CLI
-export { ConfigLoader } from './compiler/config-loader';
-export { ConduitCLI } from './cli';
-export type { ConduitConfig, EntryPointConfig } from './compiler/config-loader';
-
 // Create helper functions for common patterns
 import { ServiceDefinitions, Provider, ProxiedContainer } from './types';
 import { Container } from './container';

@@ -13,6 +13,7 @@
     "test": "turbo test",
     "compile": "turbo compile",
     "format": "turbo format",
+    "generate": "turbo generate",
     "lint": "turbo lint",
     "clean": "turbo clean",
     "dev": "turbo dev",

@@ -1,0 +1,58 @@
+{
+  "name": "conduit-example",
+  "version": "1.0.0",
+  "description": "Example application demonstrating conduit-di and conduit-compiler integration",
+  "private": true,
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "dev": "tsx src/index.ts",
+    "compile": "conduit compile",
+    "compile:dev": "npm run compile && npm run dev",
+    "clean": "rimraf lib",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "jest"
+  },
+  "dependencies": {
+    "conduit-di": "file:../../packages/conduit-di",
+    "conduit-compiler": "file:../../packages/conduit-compiler",
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "joi": "^17.12.2",
+    "dotenv": "^16.4.5",
+    "winston": "^3.13.0",
+    "pg": "^8.11.5",
+    "redis": "^4.6.13",
+    "nodemailer": "^6.9.13",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/nodemailer": "^6.4.14",
+    "@types/pg": "^8.11.5",
+    "@types/uuid": "^9.0.8",
+    "tsx": "^4.20.5",
+    "typescript": "^5.0.0",
+    "rimraf": "^5.0.0",
+    "prettier": "^3.6.0",
+    "@types/jest": "^29.5.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0"
+  },
+  "keywords": [
+    "conduit",
+    "dependency-injection",
+    "example",
+    "typescript"
+  ],
+  "author": "Joseph Lyons",
+  "license": "MIT"
+}

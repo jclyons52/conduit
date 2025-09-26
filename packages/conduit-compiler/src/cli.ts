@@ -3,7 +3,7 @@
 import { Command } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ConfigLoader,ConduitConfig } from './compiler/config-loader';
+import { ConfigLoader, ConduitConfig } from './compiler/config-loader';
 import { compile } from './compiler';
 
 /**
@@ -56,7 +56,7 @@ class ConduitCLI {
     const sampleConfig = this.generateSampleConfig();
     fs.writeFileSync(configPath, sampleConfig, 'utf8');
 
-    console.log('✅ Generated conduit.config.ts');
+    console.log('✅ Generated conduit.config.json');
     console.log('📝 Edit the config file to match your project structure');
     console.log('🚀 Run "conduit compile" to start compiling!');
   }
@@ -95,7 +95,7 @@ class ConduitCLI {
           outputFile: './src/generated/container.ts',
         },
       ],
-    }
+    };
     return JSON.stringify(sampleConfig, null, 2);
   }
 
@@ -111,7 +111,7 @@ class ConduitCLI {
 
       config.entryPoints.forEach(ep => {
         const result = compile(config.tsConfigPath ?? './tsconfig.json', ep);
-        const outputPath = ep.outputFile
+        const outputPath = ep.outputFile;
         console.log(`📁 Writing to: ${outputPath}`);
         const outputDir = path.dirname(outputPath);
         if (!fs.existsSync(outputDir)) {

@@ -1,5 +1,5 @@
 {
-  "name": "conduit",
+  "name": "conduit-compiler",
   "version": "1.0.0",
   "description": "A modern TypeScript dependency injection framework with factory-based providers and compile-time type safety",
   "main": "lib/index.js",

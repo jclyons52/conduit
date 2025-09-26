@@ -40,12 +40,3 @@ export interface IContainer<
  */
 export type ProxiedContainer<TDeps extends Record<string, any>> =
   IContainer<TDeps> & TDeps;
-
-/**
- * Utility function to extract factory code from a provider
- */
-export function getProviderFactoryCode<T>(provider: Provider<T>): string {
-  return typeof provider === 'function'
-    ? provider.toString()
-    : provider.factory.toString();
-}

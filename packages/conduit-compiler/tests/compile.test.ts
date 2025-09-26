@@ -8,8 +8,13 @@ describe('New Compile Test', () => {
       __dirname,
       '../src/example/generated/test.ts'
     );
-    const result = compile('./tsconfig.json', {
-      entryPoint: './src/example/services.ts',
+    const tsConfigPath = path.resolve(__dirname, '../tsconfig.json');
+    const entryPointPath = path.resolve(
+      __dirname,
+      '../src/example/services.ts'
+    );
+    const result = compile(tsConfigPath, {
+      entryPoint: entryPointPath,
       typeName: 'Deps',
       outputFile: outputPath,
     });

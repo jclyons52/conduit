@@ -75,10 +75,11 @@ function extractDependencies(type: Type, name: string): DependencyNode {
     case 'interface': {
       const decl = type.getSymbol()?.getDeclarations()?.[0];
 
-      return { 
-        name, 
-        kind, 
-        importPath: decl?.getSourceFile().getFilePath() as string, 
+      return {
+        name,
+        typeName: type.getSymbol()?.getName() ?? undefined,
+        kind,
+        importPath: decl?.getSourceFile().getFilePath() as string,
       };
     }
 
@@ -94,6 +95,7 @@ function extractDependencies(type: Type, name: string): DependencyNode {
         : [];
       return {
         name,
+        typeName: type.getSymbol()?.getName() ?? undefined,
         kind,
         importPath: decl?.getSourceFile().getFilePath() as string,
         children: params,

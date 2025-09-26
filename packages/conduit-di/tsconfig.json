@@ -25,11 +25,6 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true
-    ,
-      "baseUrl": ".",
-      "paths": {
-        "conduit": ["./src/index"]
-      }
     },
   "include": [
     "src/**/*"
