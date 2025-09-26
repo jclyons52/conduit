@@ -7,22 +7,8 @@ export { Container } from './container';
 // Re-export errors
 export { ServiceNotFoundError } from './errors';
 
-// Re-export compiler
-export {
-  ContainerCompiler,
-  compileContainer,
-  previewCompilation,
-} from './compiler';
-export type {
-  CompileConfig,
-  CompilationResult,
-  CompiledService,
-  CompilationMode,
-} from './compiler/types';
-
 // Re-export configuration and CLI
 export { ConfigLoader } from './compiler/config-loader';
-export { ImportDiscovery } from './compiler/import-discovery';
 export { ConduitCLI } from './cli';
 export type { ConduitConfig, EntryPointConfig } from './compiler/config-loader';
 

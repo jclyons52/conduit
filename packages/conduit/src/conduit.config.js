@@ -1,14 +1,15 @@
+/**
+ * Conduit configuration file
+ * @type {import('./compiler/config-loader').ConduitConfig}
+ */
 const config = {
-  outputDir: './src/generated',
   entryPoints: [
     {
       outputFile: 'user-service-container.ts',
-      entryPoint: './src/services',
+      entryPoint: './src/example/services.ts',
       typeName: 'AppServices',
-      mode: 'container',
     },
   ],
-  servicesFile: './src/services.ts',
 };
 
 module.exports = config;

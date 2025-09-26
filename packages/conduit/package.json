@@ -15,6 +15,7 @@
     "test:coverage": "jest --coverage",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "prepublishOnly": "npm run build",
+    "test-compile": "conduit compile",
     "clean": "rimraf lib"
   },
   "keywords": [
@@ -46,6 +47,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "ts-morph": "^27.0.0"
   }
 }
