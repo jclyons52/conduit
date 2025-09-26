@@ -31,19 +31,15 @@ function buildDepsConfig(nodes: DependencyNode[]): string {
 }
 
 function buildFactoryDeps(nodes: DependencyNode[]): string {
-  const services: string[] = [];
-
-  function visit(node: DependencyNode) {
+  const services = nodes.flatMap(node => {
     if (node.kind === 'class' || node.kind === 'function') {
-      services.push(`${node.name}?: ${capitalize(node.name)};`);
+      return [`${node.name}?: ${capitalize(node.name)};`];
     }
     if (node.kind === 'interface') {
-      services.push(`${node.name}: ${capitalize(node.name)};`);
+      return [`${node.name}: ${capitalize(node.name)};`];
     }
-    // node.children?.forEach(visit);
-  }
-
-  nodes.forEach(visit);
+    return [];
+  });
 
   return `type FactoryDeps = {\n  ${services.join('\n  ')}\n};`;
 }
@@ -52,23 +48,26 @@ function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function buildServiceDefinitions(nodes: DependencyNode[]): string {
-  function renderFactory(node: DependencyNode): string | null {
-    if (node.kind === 'class') {
-      const args =
-        node.children
-          ?.map(c => {
-            if (c.kind === 'primitive') return `config.${node.name}.${c.name}`;
-            return c.name;
-          })
-          .join(', ') ?? '';
-      return `${node.name}: ({ ${node.children?.map(c => c.name).join(', ')} }) => {
+function renderFactory(node: DependencyNode): string | null {
+  if (node.kind === 'class') {
+    const args =
+      node.children
+        ?.map(c => {
+          if (c.kind === 'primitive') return `config.${node.name}.${c.name}`;
+          return c.name;
+        })
+        .join(', ') ?? '';
+    return `${node.name}: ({ ${node.children
+      ?.filter(c => c.kind !== 'primitive')
+      .map(c => c.name)
+      .join(', ')} }) => {
         return new ${capitalize(node.name)}(${args}); ${node.circular ? ' // Note: Circular dependency detected' : ''}
       }`;
-    }
-    return null;
   }
+  return null;
+}
 
+function buildServiceDefinitions(nodes: DependencyNode[]): string {
   const factories = nodes
     .map(n => renderFactory(n))
     .filter(Boolean)
