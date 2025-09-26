@@ -4,7 +4,7 @@ import { Command } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ConfigLoader,ConduitConfig } from './compiler/config-loader';
-import { compile } from './new-compiler';
+import { compile } from './compiler';
 
 /**
  * Conduit CLI - Command line interface for the Conduit DI compiler
@@ -46,7 +46,7 @@ class ConduitCLI {
    * Handle the init command
    */
   private async handleInit(options: any): Promise<void> {
-    const configPath = path.join(process.cwd(), 'conduit.config.ts');
+    const configPath = path.join(process.cwd(), 'conduit.config.json');
 
     if (fs.existsSync(configPath) && !options.force) {
       console.error('❌ Config file already exists. Use --force to overwrite.');
@@ -96,7 +96,7 @@ class ConduitCLI {
         },
       ],
     }
-    return JSON.stringify(sampleConfig, null, 2).replace(/\"([^(\")"]+)\":/g,"$1:");
+    return JSON.stringify(sampleConfig, null, 2);
   }
 
   /**
@@ -110,7 +110,7 @@ class ConduitCLI {
       const config = await this.configLoader.loadConfig(configPath);
 
       config.entryPoints.forEach(ep => {
-        const result = compile('./tsconfig.json', ep);
+        const result = compile(config.tsConfigPath ?? './tsconfig.json', ep);
         const outputPath = ep.outputFile
         console.log(`📁 Writing to: ${outputPath}`);
         const outputDir = path.dirname(outputPath);

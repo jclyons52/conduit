@@ -21,7 +21,7 @@ export type Provider<T, TServices extends Record<string, any> = any> =
  * Service definitions mapping
  */
 export type ServiceDefinitions<T extends Record<string, any>> = {
-  [K in keyof T]: Provider<T[K]>;
+  [K in keyof T]: Provider<NonNullable<T[K]>, T>;
 };
 
 /**

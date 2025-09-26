@@ -96,7 +96,6 @@ export function generateContainerCode(
 import {
   createContainer,
   ServiceDefinitions,
-  Container,
 } from 'conduit';
 import { ${capitalize(appName)} } from '${entryFilePath}';
 
@@ -109,7 +108,7 @@ ${factoryDeps}
 export const create${capitalize(appName)}Container = (
   config: DepsConfig,
   factories: ServiceDefinitions<FactoryDeps>
-): Container<${capitalize(appName)}> => {
+): ${capitalize(appName)} => {
   ${serviceDefs}
   return createContainer(serviceDefinitions);
 };

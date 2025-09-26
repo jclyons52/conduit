@@ -2,11 +2,19 @@ import { Logger } from './logger';
 import { UserRepository } from './user-repository';
 import { EmailService } from './email';
 
+export class Foo {
+  bar(baz?: string): string {
+    return `bar ${baz}`;
+  }
+}
+
 export class UserService {
   constructor(
     private userRepository: UserRepository,
     private emailService: EmailService,
-    private logger: Logger
+    private logger: Logger,
+    private foo: Foo,
+    private baz: string
   ) {}
 
   async getUser(id: string): Promise<any> {
@@ -16,6 +24,7 @@ export class UserService {
 
   async getUserByEmail(email: string): Promise<any> {
     this.logger.info(`UserService: Getting user by email ${email}`);
+    this.foo.bar(this.baz);
     return this.userRepository.findByEmail(email);
   }
 

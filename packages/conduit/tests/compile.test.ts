@@ -1,4 +1,4 @@
-import { compile } from '../src/new-compiler';
+import { compile } from '../src/compiler';
 import * as fs from 'fs';
 import * as path from 'path';
 

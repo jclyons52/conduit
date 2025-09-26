@@ -1,0 +1,9 @@
+{
+  "entryPoints": [
+    {
+      "outputFile": "user-service-container.ts",
+      "entryPoint": "./src/example/services.ts",
+      "typeName": "AppServices"
+    }
+  ]
+}
