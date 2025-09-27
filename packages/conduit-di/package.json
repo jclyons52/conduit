@@ -1,7 +1,10 @@
 {
   "name": "conduit-di",
-  "version": "1.0.0",
+  "version": "0.1.0-alpha.1",
   "description": "A modern TypeScript dependency injection framework with factory-based providers and compile-time type safety",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
@@ -43,8 +46,16 @@
     "tsx": "^4.20.5",
     "typescript": "^5.0.0"
   },
-  "dependencies": {
-    "commander": "^12.1.0",
-    "ts-morph": "^27.0.0"
-  }
+  "peerDependencies": {
+    "typescript": ">=4.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jclyons52/conduit.git",
+    "directory": "packages/conduit-di"
+  },
+  "bugs": {
+    "url": "https://github.com/jclyons52/conduit/issues"
+  },
+  "homepage": "https://github.com/jclyons52/conduit#readme"
 }

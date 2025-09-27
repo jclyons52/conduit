@@ -3,7 +3,7 @@
 import { Command } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ConfigLoader, ConduitConfig } from './compiler/config-loader';
+import { ConfigLoader, ConduitConfig } from './compiler/load';
 import { compile } from './compiler';
 
 /**

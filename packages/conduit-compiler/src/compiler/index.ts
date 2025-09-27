@@ -1,64 +1,32 @@
 import {
   buildDependencyTree,
-  loadEntrypointType,
-  DependencyNode,
-} from './buildDependencyTree';
-import { generateContainerCode } from './generateContainerCode';
-import * as path from 'path';
-import { EntryPointConfig } from '..';
+  convertToFactoriesStructure,
+  recursivelyUpdateImportPaths,
+} from './parse';
+import { generateContainerCode, printTree } from './output';
+import { EntryPointConfig, loadEntrypointType } from './load';
 
 export function compile(
   tsConfigPath: string,
-  { entryPoint, typeName, outputFile }: EntryPointConfig
+  { entryPoint, typeName, outputFile }: EntryPointConfig,
+  verbose = false
 ) {
+  // load
   const entrypoint = loadEntrypointType(tsConfigPath, entryPoint, typeName);
+
+  // parse
   const tree = buildDependencyTree(entrypoint);
-  return generateContainerCode(
-    typeName,
-    flatten(recursivelyUpdateImportPaths(tree, outputFile))
-  );
-}
-
-function flatten(tree: DependencyNode[]): DependencyNode[] {
-  return Object.values(recursivelyFlatten(tree, {}));
-}
-
-function recursivelyFlatten(
-  nodes: DependencyNode[],
-  carry: { [key: string]: DependencyNode }
-): { [key: string]: DependencyNode } {
-  for (const node of nodes) {
-    if (node.kind === 'primitive') continue;
-    carry[node.name] = node;
-    if (node.children) {
-      recursivelyFlatten(node.children, carry);
-    }
+  const relativeTree = recursivelyUpdateImportPaths(tree, outputFile);
+  if (verbose) {
+    console.log('Full Dependency Tree:');
+    console.log(printTree('text', { nodes: relativeTree, recursive: true }));
   }
-  return carry;
-}
+  const factoryTypes = convertToFactoriesStructure(relativeTree);
+  if (verbose) {
+    console.log('Factory Types Tree:');
+    console.log(printTree('text', { nodes: factoryTypes }));
+  }
 
-function recursivelyUpdateImportPaths(
-  nodes: DependencyNode[],
-  outputPath: string
-) {
-  for (const node of nodes) {
-    if (node.importPath) {
-      node.importPath = relativeImport(outputPath, node.importPath);
-    }
-    if (node.children) {
-      recursivelyUpdateImportPaths(node.children, outputPath);
-    }
-  }
-  return nodes;
-}
-
-function relativeImport(from: string, to: string): string {
-  let relativePath = path.relative(path.dirname(from), to).replace(/\\/g, '/');
-  if (!relativePath.startsWith('.')) {
-    relativePath = './' + relativePath;
-  }
-  if (relativePath.endsWith('.ts')) {
-    relativePath = relativePath.slice(0, -3);
-  }
-  return relativePath;
+  // output
+  return generateContainerCode(typeName, factoryTypes);
 }

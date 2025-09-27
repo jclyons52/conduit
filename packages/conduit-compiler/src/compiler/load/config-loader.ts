@@ -16,7 +16,6 @@ export interface EntryPointConfig {
  * Loads and processes Conduit configuration files
  */
 export class ConfigLoader {
-
   /**
    * Load configuration from a file
    */
@@ -75,10 +74,7 @@ export class ConfigLoader {
    * Find config file in current directory or parent directories
    */
   public findConfigFile(startDir: string = process.cwd()): string | null {
-    const configNames = [
-      'conduit.config.js',
-      'conduit.config.json',
-    ];
+    const configNames = ['conduit.config.js', 'conduit.config.json'];
 
     let currentDir = startDir;
 

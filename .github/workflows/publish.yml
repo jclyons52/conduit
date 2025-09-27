@@ -1,0 +1,122 @@
+name: Publish Packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., alpha, beta, latest)'
+        required: true
+        default: 'alpha'
+        type: choice
+        options:
+          - alpha
+          - beta
+          - latest
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Build packages
+        run: npm run build
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package:
+          - { name: 'conduit-di', path: 'packages/conduit-di' }
+          - { name: 'conduit-compiler', path: 'packages/conduit-compiler' }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: |
+          cd ${{ matrix.package.path }}
+          npm run build
+
+      - name: Publish to NPM (tag-based)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          cd ${{ matrix.package.path }}
+          if [[ "${{ github.ref_name }}" == *"alpha"* ]]; then
+            npm publish --tag alpha
+          elif [[ "${{ github.ref_name }}" == *"beta"* ]]; then
+            npm publish --tag beta
+          else
+            npm publish --tag latest
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to NPM (manual)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          cd ${{ matrix.package.path }}
+          npm publish --tag ${{ github.event.inputs.version }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') && matrix.package.name == 'conduit-di'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          body: |
+            ## Changes in this Release
+
+            - Package versions updated to ${{ github.ref_name }}
+            - Both `conduit-di` and `conduit-compiler` packages published
+
+            ## Installation
+
+            ```bash
+            # Install the core DI framework
+            npm install conduit-di@${{ github.ref_name }}
+
+            # Install the compiler CLI tools
+            npm install conduit-compiler@${{ github.ref_name }}
+            ```
+
+            ## Documentation
+
+            Visit [the documentation site](https://jclyons52.github.io/conduit/) for usage guides and API reference.
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') }}

@@ -1,44 +1,5 @@
-import { Project, ts, Type } from 'ts-morph';
-
-export function loadEntrypointType(
-  tsConfigPath: string,
-  entryFilePath: string,
-  typeName: string
-) {
-  const project = new Project({
-    tsConfigFilePath: tsConfigPath,
-  });
-
-  const sourceFile = project.getSourceFileOrThrow(entryFilePath);
-  const typeAlias = sourceFile.getTypeAliasOrThrow(typeName);
-  return typeAlias.getType();
-}
-
-export type DependencyKind =
-  | 'primitive'
-  | 'function'
-  | 'interface'
-  | 'class'
-  | 'object';
-
-export interface DependencyNode {
-  name: string;
-  kind:
-    | 'primitive'
-    | 'function'
-    | 'interface'
-    | 'class'
-    | 'object'
-    | 'array'
-    | 'union'
-    | 'intersection';
-  importPath?: string;
-  typeName?: string; // e.g. "UserService"
-  optional?: boolean;
-  circular?: boolean;
-  isArray?: boolean;
-  children?: DependencyNode[];
-}
+import { ts, Type } from 'ts-morph';
+import { DependencyKind, DependencyNode } from '../types';
 
 function classifyType(type: Type): DependencyKind {
   if (type.isString() || type.isNumber() || type.isBoolean()) {

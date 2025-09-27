@@ -1,4 +1,4 @@
-import { DependencyNode } from './buildDependencyTree';
+import { DependencyNode } from '../types';
 
 function collectImports(
   nodes: DependencyNode[]

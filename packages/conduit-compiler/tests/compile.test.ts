@@ -6,7 +6,7 @@ describe('New Compile Test', () => {
   it('should run the compile command without errors', () => {
     const outputPath = path.resolve(
       __dirname,
-      '../src/example/generated/test.ts'
+      '../src/example/generated/example.ts'
     );
     const tsConfigPath = path.resolve(__dirname, '../tsconfig.json');
     const entryPointPath = path.resolve(

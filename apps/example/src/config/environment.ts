@@ -67,19 +67,21 @@ function getEnvironmentConfig(): EnvironmentConfig {
       name: process.env.DATABASE_NAME || 'conduit_example',
       user: process.env.DATABASE_USER || 'user',
       password: process.env.DATABASE_PASSWORD || 'password',
-      url: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/conduit_example'
+      url:
+        process.env.DATABASE_URL ||
+        'postgresql://user:password@localhost:5432/conduit_example',
     },
 
     redis: {
       host: process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.REDIS_PORT || '6379', 10),
-      password: process.env.REDIS_PASSWORD
+      password: process.env.REDIS_PASSWORD,
     },
 
     jwt: {
       secret: process.env.JWT_SECRET || 'fallback-secret-key',
       expiresIn: process.env.JWT_EXPIRES_IN || '24h',
-      refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
+      refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
     },
 
     email: {
@@ -87,20 +89,20 @@ function getEnvironmentConfig(): EnvironmentConfig {
         host: process.env.SMTP_HOST || 'smtp.gmail.com',
         port: parseInt(process.env.SMTP_PORT || '587', 10),
         user: process.env.SMTP_USER || '',
-        pass: process.env.SMTP_PASS || ''
+        pass: process.env.SMTP_PASS || '',
       },
-      from: process.env.EMAIL_FROM || 'noreply@example.com'
+      from: process.env.EMAIL_FROM || 'noreply@example.com',
     },
 
     rateLimit: {
       windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-      max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10)
+      max: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
     },
 
     logging: {
       level: process.env.LOG_LEVEL || 'info',
-      format: process.env.LOG_FORMAT || 'combined'
-    }
+      format: process.env.LOG_FORMAT || 'combined',
+    },
   };
 }
 

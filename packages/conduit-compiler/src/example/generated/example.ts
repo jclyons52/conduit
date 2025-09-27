@@ -18,7 +18,7 @@ export interface DepsConfig {
   };
   database: {
     connectionString: string;
-    password?: string;
+    password?: string | undefined;
   };
   emailService: {
     apiKey: string;

@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version bump type'
+        required: true
+        default: 'alpha'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+          - alpha
+          - beta
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
+
+      - name: Build packages
+        run: npm run build
+
+      - name: Configure git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Version bump
+        id: version
+        run: |
+          if [ "${{ github.event.inputs.version }}" = "alpha" ]; then
+            NEW_VERSION=$(npm version prerelease --preid=alpha --no-git-tag-version)
+          elif [ "${{ github.event.inputs.version }}" = "beta" ]; then
+            NEW_VERSION=$(npm version prerelease --preid=beta --no-git-tag-version)
+          else
+            NEW_VERSION=$(npm version ${{ github.event.inputs.version }} --no-git-tag-version)
+          fi
+
+          # Update package versions
+          cd packages/conduit-di
+          npm version $NEW_VERSION --no-git-tag-version
+          cd ../conduit-compiler
+          npm version $NEW_VERSION --no-git-tag-version
+          cd ../../apps/example
+          npm version $NEW_VERSION --no-git-tag-version
+          cd ../docs
+          npm version $NEW_VERSION --no-git-tag-version
+
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit version bump
+        run: |
+          git add .
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+          git tag ${{ steps.version.outputs.version }}
+          git push origin main
+          git push origin ${{ steps.version.outputs.version }}

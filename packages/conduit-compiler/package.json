@@ -1,7 +1,10 @@
 {
   "name": "conduit-compiler",
-  "version": "1.0.0",
-  "description": "A modern TypeScript dependency injection framework with factory-based providers and compile-time type safety",
+  "version": "0.1.0-alpha.1",
+  "description": "Compiler and CLI tools for Conduit DI framework with tree-shaking optimization",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "bin": {
@@ -49,5 +52,17 @@
   "dependencies": {
     "commander": "^12.1.0",
     "ts-morph": "^27.0.0"
-  }
+  },
+  "peerDependencies": {
+    "typescript": ">=4.8.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jclyons52/conduit.git",
+    "directory": "packages/conduit-compiler"
+  },
+  "bugs": {
+    "url": "https://github.com/jclyons52/conduit/issues"
+  },
+  "homepage": "https://github.com/jclyons52/conduit#readme"
 }
