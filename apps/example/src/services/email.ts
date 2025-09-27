@@ -3,25 +3,23 @@ import { config } from '../config/environment';
 import { ILogger } from './logger';
 import { EmailTemplate, EmailContext } from '../types/api';
 
-export interface IEmailService {
-  sendEmail(to: string, template: EmailTemplate, context?: EmailContext): Promise<void>;
-  sendWelcomeEmail(to: string, firstName: string, verificationToken: string): Promise<void>;
-  sendPasswordResetEmail(to: string, firstName: string, resetToken: string): Promise<void>;
-  sendEmailVerificationEmail(to: string, firstName: string, verificationToken: string): Promise<void>;
-  sendPasswordChangeNotification(to: string, firstName: string): Promise<void>;
-}
-
-class EmailService implements IEmailService {
+class EmailService {
   private transporter: Transporter;
 
-  constructor(private logger: ILogger) {
-    this.transporter = nodemailer.createTransporter({
-      host: config.email.smtp.host,
-      port: config.email.smtp.port,
-      secure: config.email.smtp.port === 465,
+  constructor(
+    private logger: ILogger,
+    host: string,
+    port: number,
+    user?: string,
+    password?: string
+  ) {
+    this.transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
       auth: {
-        user: config.email.smtp.user,
-        pass: config.email.smtp.pass,
+        user: user,
+        pass: password,
       },
     });
 
@@ -33,7 +31,9 @@ class EmailService implements IEmailService {
       await this.transporter.verify();
       this.logger.info('SMTP connection verified successfully');
     } catch (error) {
-      this.logger.error('SMTP connection verification failed', { error: (error as Error).message });
+      this.logger.error('SMTP connection verification failed', {
+        error: (error as Error).message,
+      });
     }
   }
 
@@ -43,7 +43,11 @@ class EmailService implements IEmailService {
     });
   }
 
-  async sendEmail(to: string, template: EmailTemplate, context: EmailContext = {}): Promise<void> {
+  async sendEmail(
+    to: string,
+    template: EmailTemplate,
+    context: EmailContext = {}
+  ): Promise<void> {
     try {
       const subject = this.replaceTemplate(template.subject, context);
       const html = this.replaceTemplate(template.html, context);
@@ -64,19 +68,23 @@ class EmailService implements IEmailService {
       this.logger.info('Email sent successfully', {
         to,
         subject,
-        messageId: result.messageId
+        messageId: result.messageId,
       });
     } catch (error) {
       this.logger.error('Failed to send email', {
         to,
         subject: template.subject,
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       throw error;
     }
   }
 
-  async sendWelcomeEmail(to: string, firstName: string, verificationToken: string): Promise<void> {
+  async sendWelcomeEmail(
+    to: string,
+    firstName: string,
+    verificationToken: string
+  ): Promise<void> {
     const verificationUrl = `${config.nodeEnv === 'production' ? 'https://yourapp.com' : 'http://localhost:3000'}/api/auth/verify-email?token=${verificationToken}`;
 
     const template: EmailTemplate = {
@@ -108,13 +116,17 @@ class EmailService implements IEmailService {
         This verification link will expire in 24 hours.
 
         If you didn't create an account with us, please ignore this email.
-      `
+      `,
     };
 
     await this.sendEmail(to, template, { firstName, verificationUrl });
   }
 
-  async sendPasswordResetEmail(to: string, firstName: string, resetToken: string): Promise<void> {
+  async sendPasswordResetEmail(
+    to: string,
+    firstName: string,
+    resetToken: string
+  ): Promise<void> {
     const resetUrl = `${config.nodeEnv === 'production' ? 'https://yourapp.com' : 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
     const template: EmailTemplate = {
@@ -149,13 +161,17 @@ class EmailService implements IEmailService {
         This reset link will expire in 1 hour.
 
         If you didn't request a password reset, please ignore this email.
-      `
+      `,
     };
 
     await this.sendEmail(to, template, { firstName, resetUrl });
   }
 
-  async sendEmailVerificationEmail(to: string, firstName: string, verificationToken: string): Promise<void> {
+  async sendEmailVerificationEmail(
+    to: string,
+    firstName: string,
+    verificationToken: string
+  ): Promise<void> {
     const verificationUrl = `${config.nodeEnv === 'production' ? 'https://yourapp.com' : 'http://localhost:3000'}/api/auth/verify-email?token=${verificationToken}`;
 
     const template: EmailTemplate = {
@@ -179,13 +195,16 @@ class EmailService implements IEmailService {
 
         Please verify your email address by visiting:
         {{verificationUrl}}
-      `
+      `,
     };
 
     await this.sendEmail(to, template, { firstName, verificationUrl });
   }
 
-  async sendPasswordChangeNotification(to: string, firstName: string): Promise<void> {
+  async sendPasswordChangeNotification(
+    to: string,
+    firstName: string
+  ): Promise<void> {
     const template: EmailTemplate = {
       subject: 'Password Changed Successfully',
       html: `
@@ -206,7 +225,7 @@ class EmailService implements IEmailService {
         This is a confirmation that your password has been successfully changed.
 
         If you didn't make this change, please contact our support team immediately.
-      `
+      `,
     };
 
     await this.sendEmail(to, template, { firstName });

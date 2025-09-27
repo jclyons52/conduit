@@ -2,33 +2,24 @@ import { createClient, RedisClientType } from 'redis';
 import { config } from '../config/environment';
 import { ILogger } from './logger';
 
-export interface ICache {
-  connect(): Promise<void>;
-  disconnect(): Promise<void>;
-  get<T = any>(key: string): Promise<T | null>;
-  set(key: string, value: any, ttlSeconds?: number): Promise<void>;
-  delete(key: string): Promise<void>;
-  exists(key: string): Promise<boolean>;
-  increment(key: string, amount?: number): Promise<number>;
-  expire(key: string, ttlSeconds: number): Promise<void>;
-  getPattern(pattern: string): Promise<string[]>;
-  deletePattern(pattern: string): Promise<void>;
-  isConnected(): boolean;
-}
-
-class CacheService implements ICache {
+export class Cache {
   private client: RedisClientType;
   private connected = false;
 
-  constructor(private logger: ILogger) {
-    const redisUrl = config.redis.password
-      ? `redis://:${config.redis.password}@${config.redis.host}:${config.redis.port}`
-      : `redis://${config.redis.host}:${config.redis.port}`;
+  constructor(
+    private logger: ILogger,
+    host: string,
+    port: number,
+    password?: string
+  ) {
+    const redisUrl = password
+      ? `redis://:${password}@${host}:${port}`
+      : `redis://${host}:${port}`;
 
     this.client = createClient({
       url: redisUrl,
       socket: {
-        reconnectStrategy: (retries) => Math.min(retries * 50, 500),
+        reconnectStrategy: retries => Math.min(retries * 50, 500),
       },
     });
 
@@ -45,7 +36,7 @@ class CacheService implements ICache {
       this.logger.info('Redis client connected and ready');
     });
 
-    this.client.on('error', (err) => {
+    this.client.on('error', err => {
       this.logger.error('Redis client error', { error: err.message });
     });
 
@@ -65,7 +56,9 @@ class CacheService implements ICache {
       await this.client.connect();
       this.logger.info('Successfully connected to Redis');
     } catch (error) {
-      this.logger.error('Failed to connect to Redis', { error: (error as Error).message });
+      this.logger.error('Failed to connect to Redis', {
+        error: (error as Error).message,
+      });
       throw error;
     }
   }
@@ -86,7 +79,10 @@ class CacheService implements ICache {
       }
       return JSON.parse(value) as T;
     } catch (error) {
-      this.logger.error('Cache get operation failed', { key, error: (error as Error).message });
+      this.logger.error('Cache get operation failed', {
+        key,
+        error: (error as Error).message,
+      });
       return null;
     }
   }
@@ -99,9 +95,15 @@ class CacheService implements ICache {
       } else {
         await this.client.set(key, serializedValue);
       }
-      this.logger.debug('Cache set operation completed', { key, ttl: ttlSeconds });
+      this.logger.debug('Cache set operation completed', {
+        key,
+        ttl: ttlSeconds,
+      });
     } catch (error) {
-      this.logger.error('Cache set operation failed', { key, error: (error as Error).message });
+      this.logger.error('Cache set operation failed', {
+        key,
+        error: (error as Error).message,
+      });
       throw error;
     }
   }
@@ -111,7 +113,10 @@ class CacheService implements ICache {
       await this.client.del(key);
       this.logger.debug('Cache delete operation completed', { key });
     } catch (error) {
-      this.logger.error('Cache delete operation failed', { key, error: (error as Error).message });
+      this.logger.error('Cache delete operation failed', {
+        key,
+        error: (error as Error).message,
+      });
       throw error;
     }
   }
@@ -121,7 +126,10 @@ class CacheService implements ICache {
       const exists = await this.client.exists(key);
       return exists === 1;
     } catch (error) {
-      this.logger.error('Cache exists operation failed', { key, error: (error as Error).message });
+      this.logger.error('Cache exists operation failed', {
+        key,
+        error: (error as Error).message,
+      });
       return false;
     }
   }
@@ -129,10 +137,17 @@ class CacheService implements ICache {
   async increment(key: string, amount: number = 1): Promise<number> {
     try {
       const result = await this.client.incrBy(key, amount);
-      this.logger.debug('Cache increment operation completed', { key, amount, result });
+      this.logger.debug('Cache increment operation completed', {
+        key,
+        amount,
+        result,
+      });
       return result;
     } catch (error) {
-      this.logger.error('Cache increment operation failed', { key, error: (error as Error).message });
+      this.logger.error('Cache increment operation failed', {
+        key,
+        error: (error as Error).message,
+      });
       throw error;
     }
   }
@@ -140,9 +155,15 @@ class CacheService implements ICache {
   async expire(key: string, ttlSeconds: number): Promise<void> {
     try {
       await this.client.expire(key, ttlSeconds);
-      this.logger.debug('Cache expire operation completed', { key, ttl: ttlSeconds });
+      this.logger.debug('Cache expire operation completed', {
+        key,
+        ttl: ttlSeconds,
+      });
     } catch (error) {
-      this.logger.error('Cache expire operation failed', { key, error: (error as Error).message });
+      this.logger.error('Cache expire operation failed', {
+        key,
+        error: (error as Error).message,
+      });
       throw error;
     }
   }
@@ -152,7 +173,10 @@ class CacheService implements ICache {
       const keys = await this.client.keys(pattern);
       return keys;
     } catch (error) {
-      this.logger.error('Cache pattern get operation failed', { pattern, error: (error as Error).message });
+      this.logger.error('Cache pattern get operation failed', {
+        pattern,
+        error: (error as Error).message,
+      });
       return [];
     }
   }
@@ -162,10 +186,16 @@ class CacheService implements ICache {
       const keys = await this.getPattern(pattern);
       if (keys.length > 0) {
         await this.client.del(keys);
-        this.logger.debug('Cache pattern delete operation completed', { pattern, keysDeleted: keys.length });
+        this.logger.debug('Cache pattern delete operation completed', {
+          pattern,
+          keysDeleted: keys.length,
+        });
       }
     } catch (error) {
-      this.logger.error('Cache pattern delete operation failed', { pattern, error: (error as Error).message });
+      this.logger.error('Cache pattern delete operation failed', {
+        pattern,
+        error: (error as Error).message,
+      });
       throw error;
     }
   }
@@ -174,5 +204,3 @@ class CacheService implements ICache {
     return this.connected;
   }
 }
-
-export { CacheService };

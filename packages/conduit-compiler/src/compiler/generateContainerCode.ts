@@ -8,17 +8,21 @@ function collectImports(
     .filter(n => n.path);
 }
 
+function opt(node: DependencyNode): string {
+  return node.optional ? '?' : '';
+}
+
 function buildDepsConfig(nodes: DependencyNode[]): string {
   function renderNode(node: DependencyNode, indent = 2): string {
     if (node.kind === 'primitive') {
-      return `${' '.repeat(indent)}${node.name}: ${'string'};`;
+      return `${' '.repeat(indent)}${node.name}${opt(node)}: ${node.typeName ?? 'string'};`;
     }
     if (node.children?.some(c => c.kind === 'primitive')) {
       const childLines = node.children
         .filter(c => c.kind === 'primitive')
         .map(c => renderNode(c, indent + 2))
         .join('\n');
-      return `${' '.repeat(indent)}${node.name}: {\n${childLines}\n${' '.repeat(indent)}};`;
+      return `${' '.repeat(indent)}${node.name}${opt(node)}: {\n${childLines}\n${' '.repeat(indent)}};`;
     }
     return '';
   }
@@ -88,8 +92,7 @@ function getName({
 
 export function generateContainerCode(
   appName: string,
-  deps: DependencyNode[],
-  entryFilePath: string
+  deps: DependencyNode[]
 ): string {
   const imports = collectImports(deps)
     .map(i => `import { ${getName(i)} } from "${i.path}";`)
@@ -104,7 +107,6 @@ import {
   createContainer,
   ServiceDefinitions,
 } from 'conduit-di';
-import { ${capitalize(appName)} } from '${entryFilePath}';
 
 ${imports}
 
@@ -115,7 +117,7 @@ ${factoryDeps}
 export const create${capitalize(appName)}Container = (
   config: DepsConfig,
   factories: ServiceDefinitions<FactoryDeps>
-): ${capitalize(appName)} => {
+) => {
   ${serviceDefs}
   return createContainer(serviceDefinitions);
 };

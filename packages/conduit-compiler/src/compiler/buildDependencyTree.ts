@@ -62,7 +62,12 @@ function classifyType(type: Type): DependencyKind {
   if (type.isObject()) {
     return 'object';
   }
-  throw new Error(`Unsupported type: ${type.getText()}`);
+  if (type.isNullable()) {
+    return classifyType(type.getNonNullableType());
+  }
+  throw new Error(
+    `Unsupported type: ${type.getText()}, flags: ${type.getFlags()}`
+  );
 }
 
 function extractDependencies(type: Type, name: string): DependencyNode {
@@ -71,7 +76,12 @@ function extractDependencies(type: Type, name: string): DependencyNode {
   switch (kind) {
     case 'primitive':
     case 'function':
-      return { name, kind };
+      return {
+        name,
+        kind,
+        optional: type.isNullable(),
+        typeName: type.getText(),
+      };
     case 'interface': {
       const decl = type.getSymbol()?.getDeclarations()?.[0];
 

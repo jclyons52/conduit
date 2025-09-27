@@ -1,38 +1,23 @@
 import { ILogger } from './logger';
-import { IUserRepository } from './user-repository';
-import { IEmailService } from './email';
-import { IAuthService } from './auth';
-import { User, CreateUserRequest, UpdateUserRequest, PaginationQuery, AuthTokens, LoginRequest, AuthenticatedUser } from '../types/api';
+import { UserRepository } from './user-repository';
+import { EmailService } from './email';
+import { AuthService } from './auth';
+import {
+  User,
+  CreateUserRequest,
+  UpdateUserRequest,
+  PaginationQuery,
+  AuthTokens,
+  LoginRequest,
+  AuthenticatedUser,
+} from '../types/api';
 
-export interface IUserService {
-  // User management
-  getUserById(id: string): Promise<User | null>;
-  getAllUsers(pagination?: PaginationQuery): Promise<{ users: User[]; total: number }>;
-  updateUser(id: string, userData: UpdateUserRequest): Promise<User | null>;
-  deleteUser(id: string): Promise<void>;
-
-  // Authentication
-  registerUser(userData: CreateUserRequest): Promise<{ user: User; tokens: AuthTokens }>;
-  loginUser(loginData: LoginRequest): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }>;
-  refreshToken(refreshToken: string): Promise<AuthTokens>;
-  logoutUser(refreshToken: string): Promise<void>;
-
-  // Email verification
-  verifyEmail(token: string): Promise<User | null>;
-  resendVerificationEmail(email: string): Promise<void>;
-
-  // Password reset
-  requestPasswordReset(email: string): Promise<void>;
-  resetPassword(token: string, newPassword: string): Promise<void>;
-  changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void>;
-}
-
-class UserService implements IUserService {
+class UserService {
   constructor(
     private logger: ILogger,
-    private userRepository: IUserRepository,
-    private emailService: IEmailService,
-    private authService: IAuthService
+    private userRepository: UserRepository,
+    private emailService: EmailService,
+    private authService: AuthService
   ) {
     this.logger.info('UserService initialized');
   }
@@ -42,12 +27,17 @@ class UserService implements IUserService {
     return await this.userRepository.findById(id);
   }
 
-  async getAllUsers(pagination?: PaginationQuery): Promise<{ users: User[]; total: number }> {
+  async getAllUsers(
+    pagination?: PaginationQuery
+  ): Promise<{ users: User[]; total: number }> {
     this.logger.info('Getting all users', pagination);
     return await this.userRepository.findAll(pagination);
   }
 
-  async updateUser(id: string, userData: UpdateUserRequest): Promise<User | null> {
+  async updateUser(
+    id: string,
+    userData: UpdateUserRequest
+  ): Promise<User | null> {
     this.logger.info('Updating user', { userId: id });
     return await this.userRepository.update(id, userData);
   }
@@ -57,7 +47,9 @@ class UserService implements IUserService {
     await this.userRepository.delete(id);
   }
 
-  async registerUser(userData: CreateUserRequest): Promise<{ user: User; tokens: AuthTokens }> {
+  async registerUser(
+    userData: CreateUserRequest
+  ): Promise<{ user: User; tokens: AuthTokens }> {
     this.logger.info('Registering new user', { email: userData.email });
 
     // Check if user already exists
@@ -70,13 +62,14 @@ class UserService implements IUserService {
     const passwordHash = await this.authService.hashPassword(userData.password);
 
     // Generate email verification token
-    const emailVerificationToken = this.authService.generateEmailVerificationToken();
+    const emailVerificationToken =
+      this.authService.generateEmailVerificationToken();
 
     // Create user
     const user = await this.userRepository.create({
       ...userData,
       passwordHash,
-      emailVerificationToken
+      emailVerificationToken,
     });
 
     // Generate auth tokens
@@ -85,27 +78,36 @@ class UserService implements IUserService {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: user.role
+      role: user.role,
     };
 
     const tokens = await this.authService.generateTokens(authenticatedUser);
 
     // Send welcome email
     try {
-      await this.emailService.sendWelcomeEmail(user.email, user.firstName, emailVerificationToken);
+      await this.emailService.sendWelcomeEmail(
+        user.email,
+        user.firstName,
+        emailVerificationToken
+      );
     } catch (error) {
       this.logger.error('Failed to send welcome email', {
         userId: user.id,
-        error: (error as Error).message
+        error: (error as Error).message,
       });
     }
 
-    this.logger.info('User registered successfully', { userId: user.id, email: user.email });
+    this.logger.info('User registered successfully', {
+      userId: user.id,
+      email: user.email,
+    });
 
     return { user, tokens };
   }
 
-  async loginUser(loginData: LoginRequest): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
+  async loginUser(
+    loginData: LoginRequest
+  ): Promise<{ user: AuthenticatedUser; tokens: AuthTokens }> {
     this.logger.info('User login attempt', { email: loginData.email });
 
     // Find user
@@ -120,19 +122,18 @@ class UserService implements IUserService {
     }
 
     // Get password hash for verification
-    const passwordResult = await this.userRepository.database.query(
-      'SELECT password_hash FROM users WHERE email = $1',
-      [loginData.email.toLowerCase()]
+    const passwordHash = await this.userRepository.getPasswordHashByEmail(
+      loginData.email.toLowerCase()
     );
-
-    if (passwordResult.rows.length === 0) {
+    if (!passwordHash) {
       throw new Error('Invalid email or password');
     }
 
-    const passwordHash = passwordResult.rows[0].password_hash;
-
     // Verify password
-    const isPasswordValid = await this.authService.verifyPassword(loginData.password, passwordHash);
+    const isPasswordValid = await this.authService.verifyPassword(
+      loginData.password,
+      passwordHash
+    );
     if (!isPasswordValid) {
       throw new Error('Invalid email or password');
     }
@@ -143,7 +144,7 @@ class UserService implements IUserService {
       email: userResult.email,
       firstName: userResult.firstName,
       lastName: userResult.lastName,
-      role: userResult.role
+      role: userResult.role,
     };
 
     // Generate tokens
@@ -152,7 +153,10 @@ class UserService implements IUserService {
     // Update last login
     await this.userRepository.updateLastLogin(user.id);
 
-    this.logger.info('User logged in successfully', { userId: user.id, email: user.email });
+    this.logger.info('User logged in successfully', {
+      userId: user.id,
+      email: user.email,
+    });
 
     return { user, tokens };
   }
@@ -212,12 +216,16 @@ class UserService implements IUserService {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       // Don't reveal if email exists or not
-      this.logger.info('Verification email resend completed (user not found)', { email });
+      this.logger.info('Verification email resend completed (user not found)', {
+        email,
+      });
       return;
     }
 
     if (user.emailVerified) {
-      this.logger.info('Email already verified, skipping resend', { userId: user.id });
+      this.logger.info('Email already verified, skipping resend', {
+        userId: user.id,
+      });
       return;
     }
 
@@ -225,15 +233,21 @@ class UserService implements IUserService {
     const verificationToken = this.authService.generateEmailVerificationToken();
 
     // Update user with new token
-    await this.userRepository.database.query(
-      'UPDATE users SET email_verification_token = $1 WHERE id = $2',
-      [verificationToken, user.id]
+    await this.userRepository.setEmailVerificationToken(
+      user.id,
+      verificationToken
     );
 
     // Send email
-    await this.emailService.sendEmailVerificationEmail(user.email, user.firstName, verificationToken);
+    await this.emailService.sendEmailVerificationEmail(
+      user.email,
+      user.firstName,
+      verificationToken
+    );
 
-    this.logger.info('Verification email sent successfully', { userId: user.id });
+    this.logger.info('Verification email sent successfully', {
+      userId: user.id,
+    });
   }
 
   async requestPasswordReset(email: string): Promise<void> {
@@ -242,7 +256,9 @@ class UserService implements IUserService {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       // Don't reveal if email exists or not
-      this.logger.info('Password reset request completed (user not found)', { email });
+      this.logger.info('Password reset request completed (user not found)', {
+        email,
+      });
       return;
     }
 
@@ -251,12 +267,22 @@ class UserService implements IUserService {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     // Store reset token
-    await this.userRepository.setPasswordResetToken(email, resetToken, expiresAt);
+    await this.userRepository.setPasswordResetToken(
+      email,
+      resetToken,
+      expiresAt
+    );
 
     // Send email
-    await this.emailService.sendPasswordResetEmail(user.email, user.firstName, resetToken);
+    await this.emailService.sendPasswordResetEmail(
+      user.email,
+      user.firstName,
+      resetToken
+    );
 
-    this.logger.info('Password reset email sent successfully', { userId: user.id });
+    this.logger.info('Password reset email sent successfully', {
+      userId: user.id,
+    });
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
@@ -271,37 +297,39 @@ class UserService implements IUserService {
     const passwordHash = await this.authService.hashPassword(newPassword);
 
     // Update password
-    await this.userRepository.database.query(
-      'UPDATE users SET password_hash = $1 WHERE id = $2',
-      [passwordHash, user.id]
-    );
+    await this.userRepository.updatePasswordById(user.id, passwordHash);
 
     // Clear reset token
     await this.userRepository.clearPasswordResetToken(user.id);
 
     // Send notification email
-    await this.emailService.sendPasswordChangeNotification(user.email, user.firstName);
+    await this.emailService.sendPasswordChangeNotification(
+      user.email,
+      user.firstName
+    );
 
     this.logger.info('Password reset successfully', { userId: user.id });
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> {
     this.logger.info('Changing password', { userId });
 
     // Get current password hash
-    const result = await this.userRepository.database.query(
-      'SELECT password_hash FROM users WHERE id = $1',
-      [userId]
-    );
-
-    if (result.rows.length === 0) {
+    const currentPasswordHash =
+      await this.userRepository.getPasswordHashById(userId);
+    if (!currentPasswordHash) {
       throw new Error('User not found');
     }
 
-    const currentPasswordHash = result.rows[0].password_hash;
-
     // Verify current password
-    const isCurrentPasswordValid = await this.authService.verifyPassword(currentPassword, currentPasswordHash);
+    const isCurrentPasswordValid = await this.authService.verifyPassword(
+      currentPassword,
+      currentPasswordHash
+    );
     if (!isCurrentPasswordValid) {
       throw new Error('Current password is incorrect');
     }
@@ -310,15 +338,15 @@ class UserService implements IUserService {
     const newPasswordHash = await this.authService.hashPassword(newPassword);
 
     // Update password
-    await this.userRepository.database.query(
-      'UPDATE users SET password_hash = $1 WHERE id = $2',
-      [newPasswordHash, userId]
-    );
+    await this.userRepository.updatePasswordById(userId, newPasswordHash);
 
     // Get user for notification
     const user = await this.userRepository.findById(userId);
     if (user) {
-      await this.emailService.sendPasswordChangeNotification(user.email, user.firstName);
+      await this.emailService.sendPasswordChangeNotification(
+        user.email,
+        user.firstName
+      );
     }
 
     this.logger.info('Password changed successfully', { userId });

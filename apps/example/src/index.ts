@@ -1,4 +1,9 @@
 import App from './app';
+import { createAppDependenciesContainer } from './generated/container';
+import { LoggerService } from './services/logger';
+import { EmailService } from './services/email';
+import { AuthService } from './services/auth';
+import { Cache } from './services/cache';
 
 /**
  * Conduit Example Backend API
@@ -13,7 +18,29 @@ import App from './app';
  */
 
 async function bootstrap() {
-  const app = new App();
+  const app = createAppDependenciesContainer(
+    {
+      database: {
+        database: 'exampledb',
+        host: 'localhost',
+        port: 5432,
+        url: 'postgresql://user:password@localhost:5432/exampledb',
+        user: 'user',
+        password: 'password',
+      },
+      emailService: {
+        host: 'smtp.example.com',
+        port: 587,
+      },
+      cache: {
+        host: 'localhost',
+        port: 6379,
+      },
+    },
+    {
+      logger: () => new LoggerService(),
+    }
+  ).app;
 
   // Handle graceful shutdown
   process.on('SIGINT', async () => {
@@ -28,7 +55,7 @@ async function bootstrap() {
     process.exit(0);
   });
 
-  process.on('uncaughtException', (error) => {
+  process.on('uncaughtException', error => {
     console.error('💥 Uncaught Exception:', error);
     process.exit(1);
   });
@@ -43,7 +70,7 @@ async function bootstrap() {
 }
 
 // Bootstrap the application
-bootstrap().catch((error) => {
+bootstrap().catch(error => {
   console.error('💥 Failed to bootstrap application:', error);
   process.exit(1);
 });

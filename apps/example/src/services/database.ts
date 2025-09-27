@@ -1,27 +1,26 @@
-import { Pool, PoolClient, QueryResult } from 'pg';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 import { config } from '../config/environment';
 import { ILogger } from './logger';
-
-export interface IDatabase {
-  connect(): Promise<void>;
-  disconnect(): Promise<void>;
-  query<T = any>(text: string, params?: any[]): Promise<QueryResult<T>>;
-  getClient(): Promise<PoolClient>;
-  isConnected(): boolean;
-}
-
-class DatabaseService implements IDatabase {
+export class Database {
   private pool: Pool | null = null;
   private connected = false;
 
-  constructor(private logger: ILogger) {
+  constructor(
+    private logger: ILogger,
+    url: string,
+    host: string,
+    port: number,
+    database: string,
+    user: string,
+    password?: string
+  ) {
     this.pool = new Pool({
-      connectionString: config.database.url,
-      host: config.database.host,
-      port: config.database.port,
-      database: config.database.name,
-      user: config.database.user,
-      password: config.database.password,
+      connectionString: url,
+      host: host,
+      port: port,
+      database: database,
+      user: user,
+      password: password,
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
@@ -37,8 +36,11 @@ class DatabaseService implements IDatabase {
       this.logger.debug('New database client connected');
     });
 
-    this.pool.on('error', (err) => {
-      this.logger.error('Database pool error', { error: err.message, stack: err.stack });
+    this.pool.on('error', err => {
+      this.logger.error('Database pool error', {
+        error: err.message,
+        stack: err.stack,
+      });
     });
   }
 
@@ -61,7 +63,9 @@ class DatabaseService implements IDatabase {
       // Initialize database schema
       await this.initializeSchema();
     } catch (error) {
-      this.logger.error('Failed to connect to database', { error: (error as Error).message });
+      this.logger.error('Failed to connect to database', {
+        error: (error as Error).message,
+      });
       throw error;
     }
   }
@@ -75,7 +79,10 @@ class DatabaseService implements IDatabase {
     }
   }
 
-  async query<T = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
+  async query<T extends QueryResultRow = any>(
+    text: string,
+    params?: any[]
+  ): Promise<QueryResult<T>> {
     if (!this.pool) {
       throw new Error('Database not connected');
     }
@@ -84,13 +91,15 @@ class DatabaseService implements IDatabase {
 
     try {
       const result = await this.pool.query<T>(text, params);
-      this.logger.debug('Query executed successfully', { rowCount: result.rowCount });
+      this.logger.debug('Query executed successfully', {
+        rowCount: result.rowCount,
+      });
       return result;
     } catch (error) {
       this.logger.error('Database query failed', {
         query: text,
         params,
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       throw error;
     }
@@ -166,10 +175,10 @@ class DatabaseService implements IDatabase {
       await this.query(createUpdatedAtTrigger);
       this.logger.info('Database schema initialized successfully');
     } catch (error) {
-      this.logger.error('Failed to initialize database schema', { error: (error as Error).message });
+      this.logger.error('Failed to initialize database schema', {
+        error: (error as Error).message,
+      });
       throw error;
     }
   }
 }
-
-export { DatabaseService };

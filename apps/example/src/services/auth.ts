@@ -3,32 +3,19 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { config } from '../config/environment';
 import { ILogger } from './logger';
-import { IDatabase } from './database';
-import { ICache } from './cache';
+import { Database } from './database';
+import { Cache } from './cache';
 import { AuthTokens, AuthenticatedUser, UserRole } from '../types/api';
 
-export interface IAuthService {
-  hashPassword(password: string): Promise<string>;
-  verifyPassword(password: string, hashedPassword: string): Promise<boolean>;
-  generateTokens(user: AuthenticatedUser): Promise<AuthTokens>;
-  verifyAccessToken(token: string): Promise<AuthenticatedUser | null>;
-  verifyRefreshToken(token: string): Promise<AuthenticatedUser | null>;
-  revokeRefreshToken(token: string): Promise<void>;
-  generateEmailVerificationToken(): string;
-  generatePasswordResetToken(): string;
-  blacklistToken(token: string): Promise<void>;
-  isTokenBlacklisted(token: string): Promise<boolean>;
-}
-
-class AuthService implements IAuthService {
+class AuthService {
   private readonly SALT_ROUNDS = 12;
   private readonly TOKEN_BLACKLIST_PREFIX = 'blacklist:';
   private readonly REFRESH_TOKEN_PREFIX = 'refresh:';
 
   constructor(
     private logger: ILogger,
-    private database: IDatabase,
-    private cache: ICache
+    private database: Database,
+    private cache: Cache
   ) {}
 
   async hashPassword(password: string): Promise<string> {
@@ -38,18 +25,25 @@ class AuthService implements IAuthService {
       this.logger.debug('Password hashed successfully');
       return hashedPassword;
     } catch (error) {
-      this.logger.error('Failed to hash password', { error: (error as Error).message });
+      this.logger.error('Failed to hash password', {
+        error: (error as Error).message,
+      });
       throw new Error('Password hashing failed');
     }
   }
 
-  async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  async verifyPassword(
+    password: string,
+    hashedPassword: string
+  ): Promise<boolean> {
     try {
       const isValid = await bcrypt.compare(password, hashedPassword);
       this.logger.debug('Password verification completed', { isValid });
       return isValid;
     } catch (error) {
-      this.logger.error('Failed to verify password', { error: (error as Error).message });
+      this.logger.error('Failed to verify password', {
+        error: (error as Error).message,
+      });
       return false;
     }
   }
@@ -64,10 +58,10 @@ class AuthService implements IAuthService {
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
-          type: 'access'
+          type: 'access',
         },
-        config.jwt.secret,
-        { expiresIn: config.jwt.expiresIn }
+        config.jwt.secret
+        // { expiresIn: config.jwt.expiresIn }
       );
 
       // Generate refresh token
@@ -76,10 +70,10 @@ class AuthService implements IAuthService {
           id: user.id,
           email: user.email,
           type: 'refresh',
-          tokenId: uuidv4()
+          tokenId: uuidv4(),
         },
-        config.jwt.secret,
-        { expiresIn: config.jwt.refreshExpiresIn }
+        config.jwt.secret
+        // { expiresIn: config.jwt.refreshExpiresIn }
       );
 
       // Store refresh token hash in database
@@ -98,7 +92,7 @@ class AuthService implements IAuthService {
     } catch (error) {
       this.logger.error('Failed to generate tokens', {
         userId: user.id,
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       throw new Error('Token generation failed');
     }
@@ -124,7 +118,7 @@ class AuthService implements IAuthService {
         email: decoded.email,
         firstName: decoded.firstName,
         lastName: decoded.lastName,
-        role: decoded.role
+        role: decoded.role,
       };
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
@@ -132,7 +126,9 @@ class AuthService implements IAuthService {
       } else if (error instanceof jwt.JsonWebTokenError) {
         this.logger.warn('Invalid access token', { error: error.message });
       } else {
-        this.logger.error('Failed to verify access token', { error: (error as Error).message });
+        this.logger.error('Failed to verify access token', {
+          error: (error as Error).message,
+        });
       }
       return null;
     }
@@ -150,7 +146,9 @@ class AuthService implements IAuthService {
       // Check if refresh token exists in database
       const isValid = await this.isRefreshTokenValid(decoded.id, token);
       if (!isValid) {
-        this.logger.warn('Refresh token not found in database', { userId: decoded.id });
+        this.logger.warn('Refresh token not found in database', {
+          userId: decoded.id,
+        });
         return null;
       }
 
@@ -161,14 +159,18 @@ class AuthService implements IAuthService {
       );
 
       if (userResult.rows.length === 0) {
-        this.logger.warn('User not found for refresh token', { userId: decoded.id });
+        this.logger.warn('User not found for refresh token', {
+          userId: decoded.id,
+        });
         return null;
       }
 
       const user = userResult.rows[0];
 
       if (!user.is_active) {
-        this.logger.warn('Inactive user attempted to refresh token', { userId: decoded.id });
+        this.logger.warn('Inactive user attempted to refresh token', {
+          userId: decoded.id,
+        });
         return null;
       }
 
@@ -177,7 +179,7 @@ class AuthService implements IAuthService {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        role: user.role as UserRole
+        role: user.role as UserRole,
       };
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
@@ -185,7 +187,9 @@ class AuthService implements IAuthService {
       } else if (error instanceof jwt.JsonWebTokenError) {
         this.logger.warn('Invalid refresh token', { error: error.message });
       } else {
-        this.logger.error('Failed to verify refresh token', { error: (error as Error).message });
+        this.logger.error('Failed to verify refresh token', {
+          error: (error as Error).message,
+        });
       }
       return null;
     }
@@ -208,9 +212,13 @@ class AuthService implements IAuthService {
       // Remove from cache
       await this.cache.delete(`${this.REFRESH_TOKEN_PREFIX}${decoded.id}`);
 
-      this.logger.info('Refresh token revoked successfully', { userId: decoded.id });
+      this.logger.info('Refresh token revoked successfully', {
+        userId: decoded.id,
+      });
     } catch (error) {
-      this.logger.error('Failed to revoke refresh token', { error: (error as Error).message });
+      this.logger.error('Failed to revoke refresh token', {
+        error: (error as Error).message,
+      });
     }
   }
 
@@ -224,8 +232,13 @@ class AuthService implements IAuthService {
 
   async blacklistToken(token: string): Promise<void> {
     try {
-      const decoded = jwt.verify(token, config.jwt.secret, { ignoreExpiration: true }) as any;
-      const expiresIn = Math.max(0, decoded.exp - Math.floor(Date.now() / 1000));
+      const decoded = jwt.verify(token, config.jwt.secret, {
+        ignoreExpiration: true,
+      }) as any;
+      const expiresIn = Math.max(
+        0,
+        decoded.exp - Math.floor(Date.now() / 1000)
+      );
 
       await this.cache.set(
         `${this.TOKEN_BLACKLIST_PREFIX}${token}`,
@@ -235,21 +248,30 @@ class AuthService implements IAuthService {
 
       this.logger.info('Token blacklisted successfully');
     } catch (error) {
-      this.logger.error('Failed to blacklist token', { error: (error as Error).message });
+      this.logger.error('Failed to blacklist token', {
+        error: (error as Error).message,
+      });
     }
   }
 
   async isTokenBlacklisted(token: string): Promise<boolean> {
     try {
-      const isBlacklisted = await this.cache.exists(`${this.TOKEN_BLACKLIST_PREFIX}${token}`);
+      const isBlacklisted = await this.cache.exists(
+        `${this.TOKEN_BLACKLIST_PREFIX}${token}`
+      );
       return isBlacklisted;
     } catch (error) {
-      this.logger.error('Failed to check token blacklist', { error: (error as Error).message });
+      this.logger.error('Failed to check token blacklist', {
+        error: (error as Error).message,
+      });
       return false;
     }
   }
 
-  private async storeRefreshToken(userId: string, refreshToken: string): Promise<void> {
+  private async storeRefreshToken(
+    userId: string,
+    refreshToken: string
+  ): Promise<void> {
     const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
@@ -264,7 +286,10 @@ class AuthService implements IAuthService {
     );
   }
 
-  private async isRefreshTokenValid(userId: string, refreshToken: string): Promise<boolean> {
+  private async isRefreshTokenValid(
+    userId: string,
+    refreshToken: string
+  ): Promise<boolean> {
     try {
       const result = await this.database.query(
         'SELECT refresh_token_hash FROM user_sessions WHERE user_id = $1 AND expires_at > NOW()',
@@ -280,7 +305,7 @@ class AuthService implements IAuthService {
     } catch (error) {
       this.logger.error('Failed to validate refresh token', {
         userId,
-        error: (error as Error).message
+        error: (error as Error).message,
       });
       return false;
     }

@@ -1,8 +1,13 @@
 export class Database {
-  constructor(private connectionString: string) {}
+  constructor(
+    private connectionString: string,
+    private password?: string
+  ) {}
 
   async connect(): Promise<void> {
-    console.log(`Connecting to PostgreSQL: ${this.connectionString}`);
+    console.log(
+      `Connecting to PostgreSQL: ${this.connectionString + this.password}`
+    );
   }
 
   async disconnect(): Promise<void> {
