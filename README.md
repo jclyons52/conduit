@@ -17,8 +17,10 @@ A modern TypeScript dependency injection framework with factory-based providers,
 
 This is a monorepo workspace with the following packages:
 
-- **`packages/conduit/`** - Core dependency injection framework
-- **`packages/example/`** - Complete example workspace demonstrating usage
+- **`packages/conduit-di/`** - Core dependency injection framework
+- **`packages/conduit-compiler/`** - Compiler and CLI tools for tree-shaking optimization
+- **`apps/example/`** - Complete example application demonstrating usage
+- **`apps/docs/`** - Documentation site built with VitePress
 
 ## Installation
 
@@ -26,11 +28,14 @@ This is a monorepo workspace with the following packages:
 # Install the workspace
 npm install
 
-# Build the conduit package
-cd packages/conduit && npm run build
+# Build all packages
+npm run build
 
-# Try the example
-cd packages/example && npm run build
+# Try the example app
+npm run build:example
+
+# Build and view docs
+npm run dev:docs
 ```
 
 ## CLI Usage
@@ -38,6 +43,9 @@ cd packages/example && npm run build
 Conduit includes powerful CLI tools for analyzing and compiling your dependency injection containers:
 
 ```bash
+# Install CLI tools globally
+npm install -g conduit-compiler
+
 # Compile optimized containers
 npx conduit compile
 
@@ -60,7 +68,7 @@ import {
   scoped,
   transient,
   ServiceDefinitions,
-} from 'conduit';
+} from 'conduit-di';
 
 // Define your services
 interface Logger {
@@ -153,28 +161,21 @@ Create a `conduit.config.js` file:
 
 ```javascript
 const config = {
-  servicesFile: './src/services.ts',
-  outputDir: './generated',
+  servicesFile: './src/app-dependencies.ts',
+  outputDir: './src/generated',
   autoDiscoverImports: true,
   mode: 'container',
 
   entryPoints: [
     {
-      entryPoint: 'userService',
-      outputFile: 'user-service-container.ts',
+      entryPoint: 'app',
+      outputFile: 'container.ts',
       mode: 'container',
-    },
-    {
-      entryPoint: 'emailService',
-      outputFile: 'email-factories.ts',
-      mode: 'factories',
     },
   ],
 
   imports: {
-    UserService: './services/user-service',
-    EmailService: './services/email-service',
-    // ... auto-discovered if autoDiscoverImports: true
+    // Auto-discovered if autoDiscoverImports: true
   },
 };
 
@@ -186,29 +187,44 @@ module.exports = config;
 The compiler generates optimized containers:
 
 ```typescript
-// Generated: user-service-container.ts
-import { UserService } from './services/user-service';
-import { Logger } from './services/logger';
+// Generated: src/generated/container.ts
+import { createContainer, scoped, singleton } from 'conduit-di';
+import { App } from '../app';
+import { LoggerService } from '../services/logger';
+import { DatabaseService } from '../services/database';
 // ... only required imports
 
 export interface ExternalParams {
-  database_url: string;
-  api_key: string;
+  database: {
+    url: string;
+    host: string;
+    port: number;
+    user: string;
+    password: string;
+    database: string;
+  };
+  emailService: {
+    host: string;
+    port: number;
+  };
+  cache: {
+    host: string;
+    port: number;
+  };
 }
 
-export function createUserService(params: ExternalParams) {
+export function createAppDependenciesContainer(
+  params: ExternalParams,
+  overrides: Partial<ServiceFactories> = {}
+) {
   const serviceDefinitions = {
-    // Only services required by userService
-    logger: scoped(() => new Logger()),
-    database: scoped(() => new Database(params.database_url)),
-    userService: scoped(
-      container =>
-        new UserService(container.get('database'), container.get('logger'))
-    ),
+    // Only services required by app
+    logger: overrides.logger || singleton(() => new LoggerService()),
+    database: scoped(() => new DatabaseService(params.database)),
+    app: scoped(container => new App(container.get('database'), container.get('logger'))),
   };
 
-  const container = createContainer(serviceDefinitions);
-  return container.get('userService');
+  return createContainer(serviceDefinitions);
 }
 ```
 
@@ -225,7 +241,7 @@ npx conduit compile --dry-run
 npx conduit list
 
 # Analyze dependencies for a service
-npx conduit analyze userService
+npx conduit analyze app
 
 # Initialize new project
 npx conduit init

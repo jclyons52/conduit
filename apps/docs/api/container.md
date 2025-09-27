@@ -21,7 +21,7 @@ A `Container<T>` instance that can resolve services.
 ### Example
 
 ```typescript
-import { createContainer, singleton, scoped } from 'conduit';
+import { createContainer, singleton, scoped } from 'conduit-di';
 
 const container = createContainer({
   logger: singleton(() => new ConsoleLogger('[APP]')),

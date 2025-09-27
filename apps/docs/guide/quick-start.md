@@ -27,7 +27,7 @@ Create your service definitions using Conduit's factory functions:
 
 ```typescript
 // services.ts
-import { ServiceDefinitions, singleton } from 'conduit';
+import { ServiceDefinitions, singleton } from 'conduit-di';
 import { ConsoleLogger, type Logger } from './services/logger';
 
 export const services: ServiceDefinitions<{
@@ -41,7 +41,7 @@ export const services: ServiceDefinitions<{
 
 ```typescript
 // main.ts
-import { createContainer } from 'conduit';
+import { createContainer } from 'conduit-di';
 import { services } from './services';
 
 const container = createContainer(services);
@@ -77,7 +77,7 @@ Update your service definitions:
 
 ```typescript
 // services.ts
-import { ServiceDefinitions, singleton, scoped } from 'conduit';
+import { ServiceDefinitions, singleton, scoped } from 'conduit-di';
 import { ConsoleLogger, type Logger } from './services/logger';
 import { PostgresDatabase, type Database } from './services/database';
 

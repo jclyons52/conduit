@@ -10,15 +10,15 @@
 ::: code-group
 
 ```bash [npm]
-npm install conduit
+npm install conduit-di conduit-compiler
 ```
 
 ```bash [yarn]
-yarn add conduit
+yarn add conduit-di conduit-compiler
 ```
 
 ```bash [pnpm]
-pnpm add conduit
+pnpm add conduit-di conduit-compiler
 ```
 
 :::
@@ -30,15 +30,15 @@ For the best development experience, install the CLI globally:
 ::: code-group
 
 ```bash [npm]
-npm install -g conduit
+npm install -g conduit-compiler
 ```
 
 ```bash [yarn]
-yarn global add conduit
+yarn global add conduit-compiler
 ```
 
 ```bash [pnpm]
-pnpm add -g conduit
+pnpm add -g conduit-compiler
 ```
 
 :::
