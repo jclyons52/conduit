@@ -1,17 +1,19 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   title: 'Conduit',
-  description: 'TypeScript Dependency Injection Framework with Revolutionary Tree-shaking',
-  
+  description:
+    'TypeScript Dependency Injection Framework with Revolutionary Tree-shaking',
+  base: 'https://jclyons52.github.io/conduit/',
+
   themeConfig: {
     logo: '/logo.svg',
-    
+
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide/' },
       { text: 'API', link: '/api/' },
-      { text: 'Examples', link: '/examples/' }
+      { text: 'Examples', link: '/examples/' },
     ],
 
     sidebar: {
@@ -21,17 +23,17 @@ export default defineConfig({
           items: [
             { text: 'Installation', link: '/guide/installation' },
             { text: 'Quick Start', link: '/guide/quick-start' },
-            { text: 'Core Concepts', link: '/guide/concepts' }
-          ]
+            { text: 'Core Concepts', link: '/guide/concepts' },
+          ],
         },
         {
           text: 'Advanced',
           items: [
             { text: 'Tree-shaking Compilation', link: '/guide/compilation' },
             { text: 'CLI Tools', link: '/guide/cli' },
-            { text: 'Configuration', link: '/guide/configuration' }
-          ]
-        }
+            { text: 'Configuration', link: '/guide/configuration' },
+          ],
+        },
       ],
       '/api/': [
         {
@@ -39,16 +41,16 @@ export default defineConfig({
           items: [
             { text: 'Container', link: '/api/container' },
             { text: 'Service Definitions', link: '/api/service-definitions' },
-            { text: 'Lifecycle Scopes', link: '/api/scopes' }
-          ]
+            { text: 'Lifecycle Scopes', link: '/api/scopes' },
+          ],
         },
         {
           text: 'Compilation API',
           items: [
             { text: 'Compiler', link: '/api/compiler' },
-            { text: 'CLI Commands', link: '/api/cli' }
-          ]
-        }
+            { text: 'CLI Commands', link: '/api/cli' },
+          ],
+        },
       ],
       '/examples/': [
         {
@@ -56,38 +58,38 @@ export default defineConfig({
           items: [
             { text: 'Basic Usage', link: '/examples/basic' },
             { text: 'Web Application', link: '/examples/web-app' },
-            { text: 'Serverless Function', link: '/examples/serverless' }
-          ]
-        }
-      ]
+            { text: 'Serverless Function', link: '/examples/serverless' },
+          ],
+        },
+      ],
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/jclyons52/conduit' }
+      { icon: 'github', link: 'https://github.com/jclyons52/conduit' },
     ],
 
     editLink: {
-      pattern: 'https://github.com/jclyons52/conduit/edit/main/apps/docs/:path'
+      pattern: 'https://github.com/jclyons52/conduit/edit/main/apps/docs/:path',
     },
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2025 Conduit Contributors'
-    }
+      copyright: 'Copyright © 2025 Conduit Contributors',
+    },
   },
 
   markdown: {
     theme: {
       light: 'github-light',
-      dark: 'github-dark'
+      dark: 'github-dark',
     },
     codeTransformers: [
       {
         // Transform code blocks for better highlighting
         postprocess(code) {
-          return code.replace(/\[!code highlight\]/g, '')
-        }
-      }
-    ]
-  }
-})
+          return code.replace(/\[!code highlight\]/g, '');
+        },
+      },
+    ],
+  },
+});
