@@ -1,12 +1,15 @@
 {
-  "name": "conduit-di",
+  "name": "@conduit/cli",
   "version": "0.1.0-alpha.1",
-  "description": "A modern TypeScript dependency injection framework with factory-based providers and compile-time type safety",
+  "description": "Compiler and CLI tools for Conduit DI framework with tree-shaking optimization",
   "publishConfig": {
     "access": "public"
   },
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "bin": {
+    "conduit": "lib/cli.js"
+  },
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
@@ -46,13 +49,17 @@
     "tsx": "^4.20.5",
     "typescript": "^5.0.0"
   },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "ts-morph": "^27.0.0"
+  },
   "peerDependencies": {
     "typescript": ">=4.8.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/jclyons52/conduit.git",
-    "directory": "packages/conduit-di"
+    "directory": "packages/cli"
   },
   "bugs": {
     "url": "https://github.com/jclyons52/conduit/issues"

@@ -52,7 +52,7 @@ jobs:
 
       - name: Type check
         run: |
-          cd packages/conduit-di
+          cd packages/di
           npx tsc --noEmit
-          cd ../conduit-compiler
+          cd ../cli
           npx tsc --noEmit

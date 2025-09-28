@@ -1,6 +1,6 @@
 # Conduit Example Backend API
 
-A real-world backend API application demonstrating the integration of **conduit-di** (dependency injection framework) and **conduit-compiler** (compile-time container generation) packages.
+A real-world backend API application demonstrating the integration of **@conduit/di** (dependency injection framework) and **@conduit/cli** (compile-time container generation) packages.
 
 ## Features
 
@@ -11,7 +11,7 @@ A real-world backend API application demonstrating the integration of **conduit-
 📧 **Email Services** with templated notifications
 📊 **Comprehensive Logging** with Winston
 🛡️ **Security Middleware** with Helmet and CORS
-🏗️ **Dependency Injection** with conduit-di
+🏗️ **Dependency Injection** with @conduit/di
 📝 **Full TypeScript** type safety
 
 ## Architecture
@@ -186,7 +186,7 @@ npm test
 # Format code
 npm run format
 
-# Generate DI container with conduit-compiler
+# Generate DI container with @conduit/cli
 npm run compile
 ```
 

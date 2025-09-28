@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { createContainer } from 'conduit-di';
+import { createContainer } from '@conduit/di';
 import { AppDependencies } from './app-dependencies';
 import { config } from './config/environment';
 import { ILogger } from './services/logger';

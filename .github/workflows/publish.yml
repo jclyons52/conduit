@@ -48,8 +48,8 @@ jobs:
     strategy:
       matrix:
         package:
-          - { name: 'conduit-di', path: 'packages/conduit-di' }
-          - { name: 'conduit-compiler', path: 'packages/conduit-compiler' }
+          - { name: '@conduit/di', path: 'packages/di' }
+          - { name: '@conduit/cli', path: 'packages/cli' }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -92,7 +92,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/') && matrix.package.name == 'conduit-di'
+        if: startsWith(github.ref, 'refs/tags/') && matrix.package.name == '@conduit/di'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -103,16 +103,16 @@ jobs:
             ## Changes in this Release
 
             - Package versions updated to ${{ github.ref_name }}
-            - Both `conduit-di` and `conduit-compiler` packages published
+            - Both `@conduit/di` and `@conduit/cli` packages published
 
             ## Installation
 
             ```bash
             # Install the core DI framework
-            npm install conduit-di@${{ github.ref_name }}
+            npm install @conduit/di@${{ github.ref_name }}
 
             # Install the compiler CLI tools
-            npm install conduit-compiler@${{ github.ref_name }}
+            npm install @conduit/cli@${{ github.ref_name }}
             ```
 
             ## Documentation

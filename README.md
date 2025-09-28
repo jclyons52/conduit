@@ -17,8 +17,8 @@ A modern TypeScript dependency injection framework with factory-based providers,
 
 This is a monorepo workspace with the following packages:
 
-- **`packages/conduit-di/`** - Core dependency injection framework
-- **`packages/conduit-compiler/`** - Compiler and CLI tools for tree-shaking optimization
+- **`packages/di/`** - Core dependency injection framework
+- **`packages/cli/`** - Compiler and CLI tools for tree-shaking optimization
 - **`apps/example/`** - Complete example application demonstrating usage
 - **`apps/docs/`** - Documentation site built with VitePress
 
@@ -44,7 +44,7 @@ Conduit includes powerful CLI tools for analyzing and compiling your dependency 
 
 ```bash
 # Install CLI tools globally
-npm install -g conduit-compiler
+npm install -g @conduit/cli
 
 # Compile optimized containers
 npx conduit compile
@@ -68,7 +68,7 @@ import {
   scoped,
   transient,
   ServiceDefinitions,
-} from 'conduit-di';
+} from '@conduit/di';
 
 // Define your services
 interface Logger {
@@ -188,7 +188,7 @@ The compiler generates optimized containers:
 
 ```typescript
 // Generated: src/generated/container.ts
-import { createContainer, scoped, singleton } from 'conduit-di';
+import { createContainer, scoped, singleton } from '@conduit/di';
 import { App } from '../app';
 import { LoggerService } from '../services/logger';
 import { DatabaseService } from '../services/database';
@@ -221,7 +221,9 @@ export function createAppDependenciesContainer(
     // Only services required by app
     logger: overrides.logger || singleton(() => new LoggerService()),
     database: scoped(() => new DatabaseService(params.database)),
-    app: scoped(container => new App(container.get('database'), container.get('logger'))),
+    app: scoped(
+      container => new App(container.get('database'), container.get('logger'))
+    ),
   };
 
   return createContainer(serviceDefinitions);

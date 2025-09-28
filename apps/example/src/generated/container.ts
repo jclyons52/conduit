@@ -2,7 +2,7 @@
 import {
   createContainer,
   ServiceDefinitions,
-} from 'conduit-di';
+} from '@conduit/di';
 
 import { App } from "../app";
 import { ILogger } from "../services/logger";

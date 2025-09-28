@@ -45,7 +45,7 @@ features:
 ## Quick Example
 
 ```typescript
-import { createContainer, singleton, scoped } from 'conduit-di';
+import { createContainer, singleton, scoped } from '@conduit/di';
 
 // Define your services with factories
 const services = {

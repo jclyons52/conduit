@@ -106,7 +106,7 @@ export function generateContainerCode(
 import {
   createContainer,
   ServiceDefinitions,
-} from 'conduit-di';
+} from '@conduit/di';
 
 ${imports}
 

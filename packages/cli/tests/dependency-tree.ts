@@ -6,21 +6,21 @@ export const dependencyTree: DependencyNode[] = [
     typeName: 'UserService',
     kind: 'class',
     importPath:
-      '/Users/josephlyons/Projects/jclyons52/conduit/packages/conduit-compiler/src/example/services/user-service.ts',
+      '/Users/josephlyons/Projects/jclyons52/conduit/packages/cli/src/example/services/user-service.ts',
     children: [
       {
         name: 'userRepository',
         typeName: 'UserRepository',
         kind: 'class',
         importPath:
-          '/Users/josephlyons/Projects/jclyons52/conduit/packages/conduit-compiler/src/example/services/user-repository.ts',
+          '/Users/josephlyons/Projects/jclyons52/conduit/packages/cli/src/example/services/user-repository.ts',
         children: [
           {
             name: 'database',
             typeName: 'Database',
             kind: 'class',
             importPath:
-              '/Users/josephlyons/Projects/jclyons52/conduit/packages/conduit-compiler/src/example/services/database.ts',
+              '/Users/josephlyons/Projects/jclyons52/conduit/packages/cli/src/example/services/database.ts',
             children: [
               {
                 name: 'connectionString',
@@ -41,7 +41,7 @@ export const dependencyTree: DependencyNode[] = [
             typeName: 'Logger',
             kind: 'interface',
             importPath:
-              '/Users/josephlyons/Projects/jclyons52/conduit/packages/conduit-compiler/src/example/services/logger.ts',
+              '/Users/josephlyons/Projects/jclyons52/conduit/packages/cli/src/example/services/logger.ts',
           },
         ],
       },
@@ -50,7 +50,7 @@ export const dependencyTree: DependencyNode[] = [
         typeName: 'EmailService',
         kind: 'class',
         importPath:
-          '/Users/josephlyons/Projects/jclyons52/conduit/packages/conduit-compiler/src/example/services/email.ts',
+          '/Users/josephlyons/Projects/jclyons52/conduit/packages/cli/src/example/services/email.ts',
         children: [
           {
             name: 'apiKey',
@@ -71,14 +71,14 @@ export const dependencyTree: DependencyNode[] = [
         typeName: 'Logger',
         kind: 'interface',
         importPath:
-          '/Users/josephlyons/Projects/jclyons52/conduit/packages/conduit-compiler/src/example/services/logger.ts',
+          '/Users/josephlyons/Projects/jclyons52/conduit/packages/cli/src/example/services/logger.ts',
       },
       {
         name: 'foo',
         typeName: 'Foo',
         kind: 'class',
         importPath:
-          '/Users/josephlyons/Projects/jclyons52/conduit/packages/conduit-compiler/src/example/services/user-service.ts',
+          '/Users/josephlyons/Projects/jclyons52/conduit/packages/cli/src/example/services/user-service.ts',
         children: [],
       },
       {
@@ -94,6 +94,6 @@ export const dependencyTree: DependencyNode[] = [
     typeName: 'INoodlerService',
     kind: 'interface',
     importPath:
-      '/Users/josephlyons/Projects/jclyons52/conduit/packages/conduit-compiler/src/example/services/noodler-service.ts',
+      '/Users/josephlyons/Projects/jclyons52/conduit/packages/cli/src/example/services/noodler-service.ts',
   },
 ];

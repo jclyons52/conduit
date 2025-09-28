@@ -58,9 +58,9 @@ jobs:
           fi
 
           # Update package versions
-          cd packages/conduit-di
+          cd packages/di
           npm version $NEW_VERSION --no-git-tag-version
-          cd ../conduit-compiler
+          cd ../cli
           npm version $NEW_VERSION --no-git-tag-version
           cd ../../apps/example
           npm version $NEW_VERSION --no-git-tag-version
