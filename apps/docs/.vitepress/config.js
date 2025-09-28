@@ -4,7 +4,7 @@ export default defineConfig({
   title: 'Conduit',
   description:
     'TypeScript Dependency Injection Framework with Revolutionary Tree-shaking',
-  base: 'https://jclyons52.github.io/conduit/',
+  base: '/conduit/',
 
   themeConfig: {
     logo: '/logo.svg',
