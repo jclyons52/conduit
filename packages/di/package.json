@@ -14,7 +14,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "pnpm run build",
     "test-compile": "conduit compile",
     "clean": "rimraf lib"
   },

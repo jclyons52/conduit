@@ -3,11 +3,7 @@
   "version": "0.1.0-alpha.1",
   "description": "Conduit DI Framework - Workspace",
   "private": true,
-  "packageManager": "npm@10.0.0",
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
+  "packageManager": "pnpm@9.0.0",
   "scripts": {
     "build": "turbo build",
     "test": "turbo test",

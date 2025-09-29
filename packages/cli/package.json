@@ -17,7 +17,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "pnpm run build",
     "test-compile": "conduit compile",
     "clean": "rimraf lib"
   },
@@ -50,6 +50,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@conduit/di": "workspace:*",
     "commander": "^12.1.0",
     "ts-morph": "^27.0.0"
   },
