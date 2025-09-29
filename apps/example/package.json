@@ -8,7 +8,7 @@
     "build": "pnpm run generate && tsc",
     "build:watch": "tsc --watch",
     "dev": "tsx src/index.ts",
-    "generate": "pnpm exec conduit compile",
+    "generate": "conduit compile",
     "generate:dev": "pnpm run generate && pnpm run dev",
     "clean": "rimraf lib",
     "format": "prettier --write \"src/**/*.ts\"",
