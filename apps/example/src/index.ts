@@ -18,8 +18,8 @@ import { StorageClass } from './types/aws-types';
  * - Comprehensive logging
  */
 
-async function bootstrap() {
-  const app = createAppDependenciesContainer(
+export function getContainer() {
+  return createAppDependenciesContainer(
     {
       database: {
         database: 'exampledb',
@@ -51,13 +51,29 @@ async function bootstrap() {
         storageClass: StorageClass.STANDARD,
         forcePathStyle: false,
       },
-      storageClass: StorageClass.STANDARD,
       queueService: {
         queueUrl:
           'https://sqs.us-east-1.amazonaws.com/123456789012/example-queue',
         region: 'us-east-1',
         messageRetentionPeriod: 1209600,
         visibilityTimeout: 30,
+      },
+      configService: {
+        endpoints: {
+          api: 'https://api.example.com',
+          websocket: 'https://auth.example.com',
+        },
+        timeouts: {
+          connect: 5000,
+          read: 10000,
+          write: 10000,
+        },
+      },
+      derivedService: {
+        serviceName: 'DerivedExampleService',
+      },
+      eventEmitterService: {
+        maxListeners: 20,
       },
     },
     {
@@ -70,8 +86,17 @@ async function bootstrap() {
         // Process the message...
       },
       requestIdGenerator: () => () => 'req-' + Date.now(),
+      s3ClientFactory: () => {
+        // Example S3 client factory
+        const { S3 } = require('@aws-sdk/client-s3');
+        return () => new S3({ region: 'us-east-1' });
+      },
     }
-  ).app;
+  );
+}
+
+async function bootstrap() {
+  const app = getContainer().app;
 
   // Handle graceful shutdown
   process.on('SIGINT', async () => {

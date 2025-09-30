@@ -2,13 +2,29 @@ import { ts, Type } from 'ts-morph';
 import { DependencyKind, DependencyNode } from '../types';
 
 function getTypeImportPath(type: Type): string | undefined {
-  const symbol = type.getSymbol() || type.getAliasSymbol();
+  const symbol = type.getAliasSymbol() || type.getSymbol();
   if (!symbol) return undefined;
 
   const declarations = symbol.getDeclarations();
   if (!declarations || declarations.length === 0) return undefined;
 
   const sourceFile = declarations[0]?.getSourceFile();
+
+  // check if this declaration comes from node_modules
+  if (sourceFile?.getFilePath().includes('node_modules')) {
+    // best effort: find the module specifier
+    const moduleSpecifier = sourceFile
+      .getImportDeclarations()
+      .find(d =>
+        d.getNamedImports().some(i => i.getName() === symbol.getName())
+      )
+      ?.getModuleSpecifierValue();
+
+    if (moduleSpecifier) {
+      return moduleSpecifier;
+    }
+  }
+
   return sourceFile?.getFilePath();
 }
 
@@ -48,7 +64,12 @@ function classifyType(type: Type): DependencyKind {
   }
 
   // Handle literal types (string literals, number literals, boolean literals)
-  if (type.isLiteral() || type.isStringLiteral() || type.isNumberLiteral() || type.isBooleanLiteral()) {
+  if (
+    type.isLiteral() ||
+    type.isStringLiteral() ||
+    type.isNumberLiteral() ||
+    type.isBooleanLiteral()
+  ) {
     return 'primitive';
   }
 
@@ -57,7 +78,13 @@ function classifyType(type: Type): DependencyKind {
   }
 
   // Check for enums
-  if (type.isEnumLiteral() || type.getSymbol()?.getDeclarations()?.some(d => d.getKindName() === 'EnumDeclaration')) {
+  if (
+    type.isEnumLiteral() ||
+    type
+      .getSymbol()
+      ?.getDeclarations()
+      ?.some(d => d.getKindName() === 'EnumDeclaration')
+  ) {
     return 'enum';
   }
 
@@ -232,9 +259,33 @@ function extractDependencies(type: Type, name: string): DependencyNode {
 
     case 'class': {
       const decl = type.getSymbol()?.getDeclarations()?.[0];
-      const ctor = decl
-        ?.asKindOrThrow(ts.SyntaxKind.ClassDeclaration)
-        .getConstructors()[0];
+      if (!decl || decl.getKind() !== ts.SyntaxKind.ClassDeclaration) {
+        return {
+          name,
+          typeName: type.getSymbol()?.getName() ?? undefined,
+          importPath: getTypeImportPath(type),
+          kind,
+        };
+      }
+      const classDecl = decl?.asKindOrThrow(ts.SyntaxKind.ClassDeclaration);
+
+      // Try to get constructor from this class
+      let ctor = classDecl?.getConstructors()[0];
+
+      // If no constructor, check parent class
+      if (!ctor) {
+        const baseTypes = type.getBaseTypes();
+
+        if (baseTypes.length > 0) {
+          const baseDecl = baseTypes[0]?.getSymbol()?.getDeclarations()?.[0];
+          if (baseDecl && classifyType(type) === 'class') {
+            const baseClassDecl = baseDecl.asKindOrThrow(
+              ts.SyntaxKind.ClassDeclaration
+            );
+            ctor = baseClassDecl.getConstructors()[0];
+          }
+        }
+      }
       const params = ctor
         ? ctor
             .getParameters()
@@ -244,7 +295,7 @@ function extractDependencies(type: Type, name: string): DependencyNode {
         name,
         typeName: type.getSymbol()?.getName() ?? undefined,
         kind,
-        importPath: decl?.getSourceFile().getFilePath() as string,
+        importPath: getTypeImportPath(type),
         children: params,
       };
     }

@@ -54,7 +54,10 @@ function buildDepsConfig(nodes: DependencyNode[]): string {
     }
 
     // For object nodes, check if they have primitive/enum children
-    if (node.kind === 'object' && node.children?.some(c => c.kind === 'primitive' || c.kind === 'enum')) {
+    if (
+      node.kind === 'object' &&
+      node.children?.some(c => c.kind === 'primitive' || c.kind === 'enum')
+    ) {
       const childLines = node.children
         .filter(c => c.kind === 'primitive' || c.kind === 'enum')
         .map(c => renderNode(c, indent + 2))
@@ -123,9 +126,13 @@ function renderFactory(node: DependencyNode): string | null {
         })
         .join(', ') ?? '';
 
-    const depNames = node.children
-      ?.filter(c => c.kind !== 'primitive' && c.kind !== 'enum' && c.kind !== 'object')
-      .map(c => c.name) ?? [];
+    const depNames =
+      node.children
+        ?.filter(
+          c =>
+            c.kind !== 'primitive' && c.kind !== 'enum' && c.kind !== 'object'
+        )
+        .map(c => c.name) ?? [];
 
     return `${node.name}: ({ ${depNames.join(', ')} }) => {
         return new ${getName(node)}(${args}); ${node.circular ? ' // Note: Circular dependency detected' : ''}
@@ -174,11 +181,17 @@ export function generateContainerCode(
 
   // Generate import statements
   const valueImports = Array.from(valueImportMap.entries())
-    .map(([path, types]) => `import { ${Array.from(types).join(', ')} } from "${path}";`)
+    .map(
+      ([path, types]) =>
+        `import { ${Array.from(types).join(', ')} } from "${path}";`
+    )
     .join('\n');
 
   const typeImports = Array.from(typeImportMap.entries())
-    .map(([path, types]) => `import type { ${Array.from(types).join(', ')} } from "${path}";`)
+    .map(
+      ([path, types]) =>
+        `import type { ${Array.from(types).join(', ')} } from "${path}";`
+    )
     .join('\n');
 
   const imports = [valueImports, typeImports].filter(Boolean).join('\n');

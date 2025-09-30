@@ -11,6 +11,9 @@ import { DynamoDBRepository } from '../services/dynamodb-repository';
 import { S3Storage } from '../services/s3-storage';
 import { QueueService } from '../services/queue-service';
 import { ConfigService } from '../services/config-service';
+import { DerivedService } from '../services/derived-service';
+import { EventEmitterService } from '../services/event-emitter-service';
+import { S3 } from '../../../../node_modules/.pnpm/@aws-sdk+client-s3@3.899.0/node_modules/@aws-sdk/client-s3/dist-types/S3.d';
 import type { ILogger } from '../services/logger';
 import type { S3Region, StorageClass } from '../types/aws-types';
 import type { MessageHandler } from '../services/queue-service';
@@ -70,6 +73,12 @@ export interface DepsConfig {
       write: number;
     };
   };
+  derivedService: {
+    serviceName: string;
+  };
+  eventEmitterService: {
+    maxListeners: number;
+  };
 }
 
 type FactoryDeps = {
@@ -87,7 +96,11 @@ type FactoryDeps = {
   s3Storage?: S3Storage;
   queueService?: QueueService;
   configService?: ConfigService;
+  derivedService?: DerivedService;
+  eventEmitterService?: EventEmitterService;
+  s3Client?: S3;
   messageHandler: MessageHandler;
+  s3ClientFactory: () => import('/Users/josephlyons/Projects/jclyons52/conduit/node_modules/.pnpm/@aws-sdk+client-s3@3.899.0/node_modules/@aws-sdk/client-s3/dist-types/S3').S3;
   errorLogger: (error: Error) => void;
   requestIdGenerator: () => string;
 };
@@ -182,6 +195,19 @@ export const createAppDependenciesContainer = (
         config.configService.endpoints,
         config.configService.timeouts
       );
+    },
+    derivedService: ({ logger }) => {
+      return new DerivedService(logger, config.derivedService.serviceName);
+    },
+    eventEmitterService: ({ logger, s3Client }) => {
+      return new EventEmitterService(
+        logger,
+        s3Client,
+        config.eventEmitterService.maxListeners
+      );
+    },
+    s3Client: ({}) => {
+      return new S3();
     },
 
     ...factories,
