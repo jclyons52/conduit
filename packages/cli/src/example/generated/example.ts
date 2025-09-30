@@ -2,7 +2,7 @@
 import {
   createContainer,
   ServiceDefinitions,
-} from '@conduit/di';
+} from '@typewryter/di';
 
 import { UserService } from "../services/user-service";
 import { UserRepository } from "../services/user-repository";

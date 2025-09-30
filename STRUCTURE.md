@@ -12,9 +12,9 @@ This monorepo uses modern tooling to organize packages and applications:
 ## Structure
 
 ```
-conduit/
+typewryter/
 ├── packages/                 # Reusable packages
-│   └── conduit/             # Core DI framework
+│   └── typewryter/             # Core DI framework
 │       ├── src/             # Source code
 │       ├── lib/             # Build output
 │       ├── tests/           # Unit tests
@@ -45,7 +45,7 @@ conduit/
 npm run build
 
 # Build specific package/app
-npm run build:conduit
+npm run build:typewryter
 npm run build:example
 npm run build:docs
 ```
@@ -72,7 +72,7 @@ npm run clean
 
 ## Package Types
 
-### `packages/conduit` (Library)
+### `packages/typewryter` (Library)
 
 - Core dependency injection framework
 - TypeScript compilation to `lib/`
@@ -93,8 +93,8 @@ npm run clean
 
 ## Development Workflow
 
-1. Make changes to `packages/conduit`
+1. Make changes to `packages/typewryter`
 2. Tests run automatically with Turborepo
-3. `apps/example` rebuilds using new conduit version
+3. `apps/example` rebuilds using new typewryter version
 4. Documentation can reference new features
 5. All outputs are cached for fast iteration

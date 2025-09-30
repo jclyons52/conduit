@@ -4,7 +4,7 @@
 
 ### ✅ Completed
 
-- **Monorepo setup**: Successfully restructured into packages/conduit and packages/example
+- **Monorepo setup**: Successfully restructured into packages/typewryter and packages/example
 - **Core DI framework**: Full implementation with factory-based providers
 - **Compilation system**: Tree-shaking compiler with dependency analysis
 - **CLI tools**: Complete CLI with compile, list, analyze, init commands
@@ -23,7 +23,7 @@
 
    ```bash
    git rm -r packages/example/generated/
-   git rm -r packages/conduit/lib/ (if tracked)
+   git rm -r packages/typewryter/lib/ (if tracked)
    ```
 
 2. **Add .gitignore patterns**:
@@ -56,7 +56,7 @@
 
 ```
 packages/
-├── conduit/           # Core framework package
+├── typewryter/           # Core framework package
 │   ├── src/
 │   │   ├── container/ # DI container
 │   │   ├── compiler/  # Tree-shaking system
@@ -67,7 +67,7 @@ packages/
 └── example/           # Demo workspace
     ├── src/services/  # Modular services
     ├── generated/     # Compiled containers (should be gitignored)
-    └── conduit.config.js # Compilation config
+    └── typewryter.config.js # Compilation config
 ```
 
 ### 🔧 Known Issues

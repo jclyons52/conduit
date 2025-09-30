@@ -1,5 +1,5 @@
 {
-  "name": "conduit-docs",
+  "name": "typewryter-docs",
   "version": "0.1.0-alpha.1",
   "description": "Documentation site for Conduit DI Framework",
   "private": true,
@@ -14,7 +14,7 @@
     "vitepress": "^1.3.4"
   },
   "keywords": [
-    "conduit",
+    "typewryter",
     "documentation",
     "vitepress"
   ]

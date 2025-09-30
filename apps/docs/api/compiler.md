@@ -27,7 +27,7 @@ A `CompilationResult` object containing the generated code and metadata.
 ### Example
 
 ```typescript
-import { compileContainer } from '@conduit/cli';
+import { compileContainer } from '@typewryter/cli';
 
 const result = compileContainer(services, 'userService', {
   mode: 'container',
@@ -175,7 +175,7 @@ import {
   ServiceDefinitions,
   singleton,
   scoped,
-} from '@conduit/di';
+} from '@typewryter/di';
 
 export interface ExternalParams {
   database: {

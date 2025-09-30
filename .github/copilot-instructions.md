@@ -1,10 +1,10 @@
 # TypeScript Dependency Injection Framework Monorepo - Copilot Instructions
 
-This is a monorepo workspace for "conduit" - a TypeScript dependency injection framework with revolutionary serverless optimization through tree-shaking compilation.
+This is a monorepo workspace for "typewryter" - a TypeScript dependency injection framework with revolutionary serverless optimization through tree-shaking compilation.
 
 ## Workspace Structure
 
-### Core Package (`/packages/conduit/`)
+### Core Package (`/packages/typewryter/`)
 
 - `/src` - Main framework source code
   - `/container/` - Core DI container implementation
@@ -18,11 +18,11 @@ This is a monorepo workspace for "conduit" - a TypeScript dependency injection f
 
 ### Example Package (`/packages/example/`)
 
-- `/src` - Example application demonstrating conduit usage
+- `/src` - Example application demonstrating typewryter usage
   - `/services/` - Modular service implementations
   - `services.ts` - Main service definitions
 - `/generated` - Compiled containers (should be gitignored)
-- `conduit.config.js` - Compilation configuration
+- `typewryter.config.js` - Compilation configuration
 - `test-workspace.ts` - Integration test
 
 ## Development Guidelines
@@ -84,11 +84,11 @@ This is a monorepo workspace for "conduit" - a TypeScript dependency injection f
 ```bash
 # Root workspace
 npm install                    # Install all dependencies
-npm run build:conduit         # Build conduit package
+npm run build:typewryter         # Build typewryter package
 npm run build:example         # Build example
 
 # Conduit package
-cd packages/conduit
+cd packages/typewryter
 npm run build                 # Compile TypeScript
 npm test                      # Run tests
 

@@ -45,7 +45,7 @@ features:
 ## Quick Example
 
 ```typescript
-import { createContainer, singleton, scoped } from '@conduit/di';
+import { createContainer, singleton, scoped } from '@typewryter/di';
 
 // Define your services with factories
 const services = {
@@ -66,7 +66,7 @@ const userService = container.get('userService');
 
 ```bash
 # Compile only the services you need
-npx conduit compile userService
+npx typewryter compile userService
 
 # Result: 89% smaller bundle
 # From: 15KB (all services)

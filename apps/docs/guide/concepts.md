@@ -7,7 +7,12 @@ Conduit is built around several key concepts that make it powerful yet simple to
 Service definitions are the heart of Conduit. They describe how to create your services using factory functions:
 
 ```typescript
-import { ServiceDefinitions, singleton, scoped, transient } from '@conduit/di';
+import {
+  ServiceDefinitions,
+  singleton,
+  scoped,
+  transient,
+} from '@typewryter/di';
 
 const services: ServiceDefinitions<{
   config: Config;
@@ -77,7 +82,7 @@ database: singleton(() => new PostgresDatabase('postgresql://localhost/mydb'));
 Containers hold your services and manage their lifecycles:
 
 ```typescript
-import { createContainer } from '@conduit/di';
+import { createContainer } from '@typewryter/di';
 
 const container = createContainer(services);
 
@@ -103,7 +108,7 @@ The compile-time analysis identifies:
 logger, database, userService, emailService, notificationService...
 
 # After compilation: Only what you need (1.6KB)
-npx conduit compile userService
+npx typewryter compile userService
 # Result: userService + database + logger only
 ```
 

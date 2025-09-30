@@ -44,19 +44,19 @@ Conduit includes powerful CLI tools for analyzing and compiling your dependency 
 
 ```bash
 # Install CLI tools globally
-npm install -g @conduit/cli
+npm install -g @typewryter/cli
 
 # Compile optimized containers
-npx conduit compile
+npx typewryter compile
 
 # List all available services
-npx conduit list
+npx typewryter list
 
 # Analyze service dependencies
-npx conduit analyze userService
+npx typewryter analyze userService
 
 # Initialize a new project
-npx conduit init
+npx typewryter init
 ```
 
 ## Quick Start
@@ -68,7 +68,7 @@ import {
   scoped,
   transient,
   ServiceDefinitions,
-} from '@conduit/di';
+} from '@typewryter/di';
 
 // Define your services
 interface Logger {
@@ -157,7 +157,7 @@ Conduit includes a revolutionary compilation system that generates tree-shaken, 
 
 ### Configuration
 
-Create a `conduit.config.js` file:
+Create a `typewryter.config.js` file:
 
 ```javascript
 const config = {
@@ -188,7 +188,7 @@ The compiler generates optimized containers:
 
 ```typescript
 // Generated: src/generated/container.ts
-import { createContainer, scoped, singleton } from '@conduit/di';
+import { createContainer, scoped, singleton } from '@typewryter/di';
 import { App } from '../app';
 import { LoggerService } from '../services/logger';
 import { DatabaseService } from '../services/database';
@@ -234,19 +234,19 @@ export function createAppDependenciesContainer(
 
 ```bash
 # Compile all entry points
-npx conduit compile
+npx typewryter compile
 
 # Dry run compilation
-npx conduit compile --dry-run
+npx typewryter compile --dry-run
 
 # List all services
-npx conduit list
+npx typewryter list
 
 # Analyze dependencies for a service
-npx conduit analyze app
+npx typewryter analyze app
 
 # Initialize new project
-npx conduit init
+npx typewryter init
 ```
 
 ## Service Scopes

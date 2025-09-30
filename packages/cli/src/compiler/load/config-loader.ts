@@ -74,7 +74,7 @@ export class ConfigLoader {
    * Find config file in current directory or parent directories
    */
   public findConfigFile(startDir: string = process.cwd()): string | null {
-    const configNames = ['conduit.config.js', 'conduit.config.json'];
+    const configNames = ['typewryter.config.js', 'typewryter.config.json'];
 
     let currentDir = startDir;
 

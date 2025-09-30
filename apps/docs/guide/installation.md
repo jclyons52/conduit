@@ -10,15 +10,15 @@
 ::: code-group
 
 ```bash [npm]
-npm install @conduit/di @conduit/cli
+npm install @typewryter/di @typewryter/cli
 ```
 
 ```bash [yarn]
-yarn add @conduit/di @conduit/cli
+yarn add @typewryter/di @typewryter/cli
 ```
 
 ```bash [pnpm]
-pnpm add @conduit/di @conduit/cli
+pnpm add @typewryter/di @typewryter/cli
 ```
 
 :::
@@ -30,15 +30,15 @@ For the best development experience, install the CLI globally:
 ::: code-group
 
 ```bash [npm]
-npm install -g @conduit/cli
+npm install -g @typewryter/cli
 ```
 
 ```bash [yarn]
-yarn global add @conduit/cli
+yarn global add @typewryter/cli
 ```
 
 ```bash [pnpm]
-pnpm add -g @conduit/cli
+pnpm add -g @typewryter/cli
 ```
 
 :::
@@ -46,7 +46,7 @@ pnpm add -g @conduit/cli
 ## Verify Installation
 
 ```bash
-conduit --version
+typewryter --version
 ```
 
 You should see the installed version number.

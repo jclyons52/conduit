@@ -19,24 +19,25 @@ class ConduitCLI {
 
   private setupCommands(): void {
     this.program
-      .name('conduit')
+      .name('typewryter')
       .description('Conduit Dependency Injection Compiler')
       .version('1.0.0');
 
     // Generate config command
     this.program
       .command('init')
-      .description('Generate a sample conduit.config.ts file')
+      .description('Generate a sample typewryter.config.ts file')
       .option('-f, --force', 'Overwrite existing config file')
       .action(this.handleInit.bind(this));
 
     // Type-driven generate command
     this.program
-      .command('compile')
+      .command('generate')
       .description(
         'Generate type-driven containers based on ServiceDefinitions'
       )
-      .option('-c, --config <path>', 'Path to conduit config file')
+      .option('-f, --file <path>', 'path to file with service definitions')
+      .option('-t, --type <type>', 'type of service definition')
       .option('-o, --output <file>', 'Output file name')
       .option('--dry-run', 'Show what would be generated without writing files')
       .action(this.handleGenerateTypes.bind(this));
@@ -46,7 +47,7 @@ class ConduitCLI {
    * Handle the init command
    */
   private async handleInit(options: any): Promise<void> {
-    const configPath = path.join(process.cwd(), 'conduit.config.json');
+    const configPath = path.join(process.cwd(), 'typewryter.config.json');
 
     if (fs.existsSync(configPath) && !options.force) {
       console.error('❌ Config file already exists. Use --force to overwrite.');
@@ -56,9 +57,9 @@ class ConduitCLI {
     const sampleConfig = this.generateSampleConfig();
     fs.writeFileSync(configPath, sampleConfig, 'utf8');
 
-    console.log('✅ Generated conduit.config.json');
+    console.log('✅ Generated typewryter.config.json');
     console.log('📝 Edit the config file to match your project structure');
-    console.log('🚀 Run "conduit compile" to start compiling!');
+    console.log('🚀 Run "typewryter compile" to start compiling!');
   }
 
   /**
@@ -75,7 +76,7 @@ class ConduitCLI {
     const foundPath = this.configLoader.findConfigFile();
     if (!foundPath) {
       throw new Error(
-        'No conduit config file found. Run "conduit init" to create one.'
+        'No typewryter config file found. Run "typewryter init" to create one.'
       );
     }
 

@@ -22,7 +22,7 @@ class LoggerService implements ILogger {
         winston.format.errors({ stack: true }),
         winston.format.json()
       ),
-      defaultMeta: { service: 'conduit-example-api' },
+      defaultMeta: { service: 'typewryter-example-api' },
       transports: [
         new winston.transports.File({
           filename: 'logs/error.log',

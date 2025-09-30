@@ -9,7 +9,7 @@ import { Cache } from './services/cache';
  * Conduit Example Backend API
  *
  * A real-world backend API application demonstrating:
- * - Dependency Injection with @conduit/di
+ * - Dependency Injection with @typewryter/di
  * - Express.js REST API
  * - Database & Cache layers
  * - Authentication & Authorization

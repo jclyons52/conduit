@@ -27,7 +27,7 @@ Create your service definitions using Conduit's factory functions:
 
 ```typescript
 // services.ts
-import { ServiceDefinitions, singleton } from '@conduit/di';
+import { ServiceDefinitions, singleton } from '@typewryter/di';
 import { ConsoleLogger, type Logger } from './services/logger';
 
 export const services: ServiceDefinitions<{
@@ -41,7 +41,7 @@ export const services: ServiceDefinitions<{
 
 ```typescript
 // main.ts
-import { createContainer } from '@conduit/di';
+import { createContainer } from '@typewryter/di';
 import { services } from './services';
 
 const container = createContainer(services);
@@ -77,7 +77,7 @@ Update your service definitions:
 
 ```typescript
 // services.ts
-import { ServiceDefinitions, singleton, scoped } from '@conduit/di';
+import { ServiceDefinitions, singleton, scoped } from '@typewryter/di';
 import { ConsoleLogger, type Logger } from './services/logger';
 import { PostgresDatabase, type Database } from './services/database';
 
@@ -98,7 +98,7 @@ export const services: ServiceDefinitions<{
 The real power of Conduit comes from tree-shaking compilation. Create a config file:
 
 ```javascript
-// conduit.config.js
+// typewryter.config.js
 module.exports = {
   servicesFile: './services.ts',
   outputDir: './generated',
@@ -111,7 +111,7 @@ module.exports = {
 Compile your services:
 
 ```bash
-npx conduit compile database
+npx typewryter compile database
 ```
 
 This generates an optimized container that includes only the `database` service and its dependencies (`logger`), resulting in much smaller bundles.

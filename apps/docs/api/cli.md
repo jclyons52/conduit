@@ -8,7 +8,7 @@ Options available for all commands:
 
 - `--help, -h` - Show help information
 - `--version, -v` - Show version number
-- `--config, -c <path>` - Path to configuration file (default: `conduit.config.js`)
+- `--config, -c <path>` - Path to configuration file (default: `typewryter.config.js`)
 - `--verbose` - Enable verbose output
 - `--quiet, -q` - Suppress non-essential output
 
@@ -19,8 +19,8 @@ Generate tree-shaken containers for specific services.
 ### Syntax
 
 ```bash
-conduit compile <service> [options]
-conduit compile <service1> <service2> ... [options]
+typewryter compile <service> [options]
+typewryter compile <service1> <service2> ... [options]
 ```
 
 ### Arguments
@@ -39,22 +39,22 @@ conduit compile <service1> <service2> ... [options]
 
 ```bash
 # Compile single service
-conduit compile userService
+typewryter compile userService
 
 # Compile multiple services
-conduit compile userService orderService emailService
+typewryter compile userService orderService emailService
 
 # Use factories mode
-conduit compile userService --mode factories
+typewryter compile userService --mode factories
 
 # Watch for changes
-conduit compile userService --watch
+typewryter compile userService --watch
 
 # Custom output directory
-conduit compile userService --output ./dist/generated
+typewryter compile userService --output ./dist/generated
 
 # Dry run to preview
-conduit compile userService --dry-run
+typewryter compile userService --dry-run
 ```
 
 ### Exit Codes
@@ -71,7 +71,7 @@ Display all services defined in your service definitions.
 ### Syntax
 
 ```bash
-conduit list [options]
+typewryter list [options]
 ```
 
 ### Options
@@ -85,22 +85,22 @@ conduit list [options]
 
 ```bash
 # List all services in table format
-conduit list
+typewryter list
 
 # Show as dependency tree
-conduit list --format tree
+typewryter list --format tree
 
 # Include dependencies
-conduit list --dependencies
+typewryter list --dependencies
 
 # Filter by scope
-conduit list --scope singleton
+typewryter list --scope singleton
 
 # Output as JSON
-conduit list --format json
+typewryter list --format json
 
 # Sort by dependency count
-conduit list --sort dependencies
+typewryter list --sort dependencies
 ```
 
 ### Sample Output
@@ -144,7 +144,7 @@ Analyze dependency trees, compilation metrics, and service usage.
 ### Syntax
 
 ```bash
-conduit analyze [service] [options]
+typewryter analyze [service] [options]
 ```
 
 ### Arguments
@@ -164,28 +164,28 @@ conduit analyze [service] [options]
 
 ```bash
 # Analyze specific service
-conduit analyze userService
+typewryter analyze userService
 
 # Show dependency tree
-conduit analyze userService --tree
+typewryter analyze userService --tree
 
 # Show compilation metrics
-conduit analyze userService --metrics
+typewryter analyze userService --metrics
 
 # Analyze all services
-conduit analyze --all
+typewryter analyze --all
 
 # Show external parameters
-conduit analyze userService --external
+typewryter analyze userService --external
 
 # Limit tree depth
-conduit analyze userService --tree --depth 2
+typewryter analyze userService --tree --depth 2
 
 # Output as JSON
-conduit analyze userService --format json
+typewryter analyze userService --format json
 
 # Save analysis to file
-conduit analyze userService --output analysis.json
+typewryter analyze userService --output analysis.json
 ```
 
 ### Sample Output
@@ -229,7 +229,7 @@ Initialize a new Conduit project with proper configuration and structure.
 ### Syntax
 
 ```bash
-conduit init [project-name] [options]
+typewryter init [project-name] [options]
 ```
 
 ### Arguments
@@ -249,22 +249,22 @@ conduit init [project-name] [options]
 
 ```bash
 # Create basic project
-conduit init my-project
+typewryter init my-project
 
 # Use web application template
-conduit init my-web-app --template web-app
+typewryter init my-web-app --template web-app
 
 # Use yarn package manager
-conduit init my-project --package-manager yarn
+typewryter init my-project --package-manager yarn
 
 # Skip dependency installation
-conduit init my-project --no-install
+typewryter init my-project --no-install
 
 # Create in current directory
-conduit init .
+typewryter init .
 
 # Use JavaScript instead of TypeScript
-conduit init my-project --javascript
+typewryter init my-project --javascript
 ```
 
 ### Templates
@@ -308,7 +308,7 @@ my-project/
 │   └── index.ts
 ├── tests/
 │   └── services.test.ts
-├── conduit.config.js
+├── typewryter.config.js
 ├── package.json
 ├── tsconfig.json
 ├── .gitignore
@@ -324,26 +324,26 @@ Manage Conduit configuration files.
 #### Syntax
 
 ```bash
-conduit config <command> [options]
+typewryter config <command> [options]
 ```
 
 #### Commands
 
-- `conduit config init` - Create default configuration file
-- `conduit config validate` - Validate current configuration
-- `conduit config show` - Display current configuration
+- `typewryter config init` - Create default configuration file
+- `typewryter config validate` - Validate current configuration
+- `typewryter config show` - Display current configuration
 
 #### Examples
 
 ```bash
 # Create default config
-conduit config init
+typewryter config init
 
 # Validate configuration
-conduit config validate
+typewryter config validate
 
 # Show current config
-conduit config show
+typewryter config show
 ```
 
 ## Environment Variables
@@ -359,13 +359,13 @@ Conduit CLI respects these environment variables:
 
 ```bash
 # Use custom config file
-CONDUIT_CONFIG=./configs/prod.js conduit compile userService
+CONDUIT_CONFIG=./configs/prod.js typewryter compile userService
 
 # Set output directory
-CONDUIT_OUTPUT=./dist conduit compile userService
+CONDUIT_OUTPUT=./dist typewryter compile userService
 
 # Enable debug logging
-CONDUIT_LOG_LEVEL=debug conduit analyze userService
+CONDUIT_LOG_LEVEL=debug typewryter analyze userService
 ```
 
 ## Exit Codes
@@ -386,24 +386,24 @@ Standard exit codes returned by CLI commands:
 ### Verbose Output
 
 ```bash
-conduit compile userService --verbose
+typewryter compile userService --verbose
 ```
 
 ### Debug Mode
 
 ```bash
-CONDUIT_LOG_LEVEL=debug conduit compile userService
+CONDUIT_LOG_LEVEL=debug typewryter compile userService
 ```
 
 ### Configuration Troubleshooting
 
 ```bash
 # Validate configuration
-conduit config validate
+typewryter config validate
 
 # Show resolved configuration
-conduit config show
+typewryter config show
 
 # Test with explicit config
-conduit compile userService --config ./debug.config.js
+typewryter compile userService --config ./debug.config.js
 ```

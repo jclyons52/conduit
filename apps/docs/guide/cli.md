@@ -7,13 +7,13 @@ Conduit provides a comprehensive command-line interface for managing your depend
 Install the Conduit CLI globally for the best experience:
 
 ```bash
-npm install -g conduit
+npm install -g typewryter
 ```
 
 Or run commands directly with npx:
 
 ```bash
-npx conduit --help
+npx typewryter --help
 ```
 
 ## Commands Overview
@@ -32,12 +32,12 @@ Generate optimized containers that include only the services you need.
 ### Usage
 
 ```bash
-conduit compile [service-name] [options]
+typewryter compile [service-name] [options]
 ```
 
 ### Options
 
-- `--config, -c` - Path to configuration file (default: `conduit.config.js`)
+- `--config, -c` - Path to configuration file (default: `typewryter.config.js`)
 - `--mode, -m` - Output mode: `container` or `factories` (default: `container`)
 - `--output, -o` - Output directory (overrides config)
 - `--dry-run` - Show what would be generated without writing files
@@ -46,16 +46,16 @@ conduit compile [service-name] [options]
 
 ```bash
 # Compile a specific service
-conduit compile userService
+typewryter compile userService
 
 # Compile with factories output
-conduit compile userService --mode factories
+typewryter compile userService --mode factories
 
 # Use custom config file
-conduit compile userService --config ./configs/production.js
+typewryter compile userService --config ./configs/production.js
 
 # Preview without generating files
-conduit compile userService --dry-run
+typewryter compile userService --dry-run
 ```
 
 ### Output Modes
@@ -92,7 +92,7 @@ Display all services defined in your service definitions file.
 ### Usage
 
 ```bash
-conduit list [options]
+typewryter list [options]
 ```
 
 ### Options
@@ -105,16 +105,16 @@ conduit list [options]
 
 ```bash
 # List all services in table format
-conduit list
+typewryter list
 
 # Show as dependency tree
-conduit list --format tree
+typewryter list --format tree
 
 # Include dependency details
-conduit list --dependencies
+typewryter list --dependencies
 
 # Output as JSON for scripting
-conduit list --format json
+typewryter list --format json
 ```
 
 ### Sample Output
@@ -138,7 +138,7 @@ Perform deep analysis of your service definitions, dependencies, and compilation
 ### Usage
 
 ```bash
-conduit analyze [service-name] [options]
+typewryter analyze [service-name] [options]
 ```
 
 ### Options
@@ -153,16 +153,16 @@ conduit analyze [service-name] [options]
 
 ```bash
 # Analyze specific service
-conduit analyze userService
+typewryter analyze userService
 
 # Show dependency tree
-conduit analyze userService --tree
+typewryter analyze userService --tree
 
 # Show compilation metrics
-conduit analyze userService --metrics
+typewryter analyze userService --metrics
 
 # Analyze all services
-conduit analyze --all
+typewryter analyze --all
 ```
 
 ### Sample Output
@@ -201,7 +201,7 @@ Initialize a new Conduit project with proper configuration and example files.
 ### Usage
 
 ```bash
-conduit init [project-name] [options]
+typewryter init [project-name] [options]
 ```
 
 ### Options
@@ -214,13 +214,13 @@ conduit init [project-name] [options]
 
 ```bash
 # Create basic project
-conduit init my-project
+typewryter init my-project
 
 # Create web application template
-conduit init my-web-app --template web-app
+typewryter init my-web-app --template web-app
 
 # Use yarn as package manager
-conduit init my-project --package-manager yarn
+typewryter init my-project --package-manager yarn
 ```
 
 ### Generated Structure
@@ -233,14 +233,14 @@ my-project/
 │   │   └── database.ts
 │   ├── services.ts
 │   └── index.ts
-├── conduit.config.js
+├── typewryter.config.js
 ├── package.json
 └── tsconfig.json
 ```
 
 ## Configuration File
 
-Create a `conduit.config.js` file to configure the CLI:
+Create a `typewryter.config.js` file to configure the CLI:
 
 ```javascript
 module.exports = {
@@ -274,9 +274,9 @@ module.exports = {
 ```json
 {
   "scripts": {
-    "build": "conduit compile userService && tsc",
-    "analyze": "conduit analyze --all",
-    "prestart": "conduit compile userService"
+    "build": "typewryter compile userService && tsc",
+    "analyze": "typewryter analyze --all",
+    "prestart": "typewryter compile userService"
   }
 }
 ```
@@ -300,7 +300,7 @@ module.exports = {
 # GitHub Actions example
 - name: Generate optimized containers
   run: |
-    npm install -g conduit
-    conduit compile userService --mode container
-    conduit analyze userService --metrics
+    npm install -g typewryter
+    typewryter compile userService --mode container
+    typewryter analyze userService --metrics
 ```

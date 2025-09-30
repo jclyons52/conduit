@@ -1,6 +1,6 @@
 # Conduit Example Backend API
 
-A real-world backend API application demonstrating the integration of **@conduit/di** (dependency injection framework) and **@conduit/cli** (compile-time container generation) packages.
+A real-world backend API application demonstrating the integration of **@typewryter/di** (dependency injection framework) and **@typewryter/cli** (compile-time container generation) packages.
 
 ## Features
 
@@ -11,7 +11,7 @@ A real-world backend API application demonstrating the integration of **@conduit
 📧 **Email Services** with templated notifications
 📊 **Comprehensive Logging** with Winston
 🛡️ **Security Middleware** with Helmet and CORS
-🏗️ **Dependency Injection** with @conduit/di
+🏗️ **Dependency Injection** with @typewryter/di
 📝 **Full TypeScript** type safety
 
 ## Architecture
@@ -28,15 +28,15 @@ A real-world backend API application demonstrating the integration of **@conduit
 
 ### API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Health check and service status |
-| `/api/users` | GET | List all users (paginated) |
-| `/api/auth/register` | POST | User registration |
-| `/api/auth/login` | POST | User authentication |
-| `/api/auth/logout` | POST | User logout |
-| `/api/auth/refresh` | POST | Token refresh |
-| `/api/auth/verify-email` | GET | Email verification |
+| Endpoint                 | Method | Description                     |
+| ------------------------ | ------ | ------------------------------- |
+| `/health`                | GET    | Health check and service status |
+| `/api/users`             | GET    | List all users (paginated)      |
+| `/api/auth/register`     | POST   | User registration               |
+| `/api/auth/login`        | POST   | User authentication             |
+| `/api/auth/logout`       | POST   | User logout                     |
+| `/api/auth/refresh`      | POST   | Token refresh                   |
+| `/api/auth/verify-email` | GET    | Email verification              |
 
 ## Quick Start
 
@@ -63,7 +63,7 @@ PORT=3000
 NODE_ENV=development
 
 # Database (PostgreSQL)
-DATABASE_URL=postgresql://user:password@localhost:5432/conduit_example
+DATABASE_URL=postgresql://user:password@localhost:5432/typewryter_example
 
 # Redis Cache
 REDIS_HOST=localhost
@@ -82,11 +82,13 @@ SMTP_PASS=your-app-password
 ## API Testing
 
 ### Health Check
+
 ```bash
 curl http://localhost:3000/health
 ```
 
 ### Register User
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
@@ -99,6 +101,7 @@ curl -X POST http://localhost:3000/api/auth/register \
 ```
 
 ### Login User
+
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -109,6 +112,7 @@ curl -X POST http://localhost:3000/api/auth/login \
 ```
 
 ### List Users
+
 ```bash
 curl http://localhost:3000/api/users
 ```
@@ -147,23 +151,32 @@ Services are configured with proper scoping:
 export const appServiceDefinitions = {
   // Singleton services (shared instances)
   logger: singleton(() => new LoggerService()),
-  database: singleton(container => new DatabaseService(container.get('logger'))),
+  database: singleton(
+    container => new DatabaseService(container.get('logger'))
+  ),
   cache: singleton(container => new CacheService(container.get('logger'))),
 
   // Scoped services (new instance per request)
-  userRepository: scoped(container =>
-    new UserRepository(container.get('logger'), container.get('database'))
+  userRepository: scoped(
+    container =>
+      new UserRepository(container.get('logger'), container.get('database'))
   ),
-  authService: scoped(container =>
-    new AuthService(container.get('logger'), container.get('database'), container.get('cache'))
+  authService: scoped(
+    container =>
+      new AuthService(
+        container.get('logger'),
+        container.get('database'),
+        container.get('cache')
+      )
   ),
-  userService: scoped(container =>
-    new UserService(
-      container.get('logger'),
-      container.get('userRepository'),
-      container.get('emailService'),
-      container.get('authService')
-    )
+  userService: scoped(
+    container =>
+      new UserService(
+        container.get('logger'),
+        container.get('userRepository'),
+        container.get('emailService'),
+        container.get('authService')
+      )
   ),
 };
 ```
@@ -186,7 +199,7 @@ npm test
 # Format code
 npm run format
 
-# Generate DI container with @conduit/cli
+# Generate DI container with @typewryter/cli
 npm run compile
 ```
 

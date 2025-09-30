@@ -1,5 +1,5 @@
 {
-  "name": "conduit-workspace",
+  "name": "typewryter-workspace",
   "version": "0.1.0-alpha.1",
   "description": "Conduit DI Framework - Workspace",
   "private": true,
@@ -13,11 +13,11 @@
     "lint": "turbo lint",
     "clean": "turbo clean",
     "dev": "turbo dev",
-    "build:conduit": "turbo build --filter=conduit",
-    "build:example": "turbo build --filter=conduit-example",
-    "build:docs": "turbo build --filter=conduit-docs",
-    "dev:docs": "turbo dev --filter=conduit-docs",
-    "test:example": "turbo test --filter=conduit-example"
+    "build:typewryter": "turbo build --filter=typewryter",
+    "build:example": "turbo build --filter=typewryter-example",
+    "build:docs": "turbo build --filter=typewryter-docs",
+    "dev:docs": "turbo dev --filter=typewryter-docs",
+    "test:example": "turbo test --filter=typewryter-example"
   },
   "keywords": [
     "dependency-injection",
@@ -51,12 +51,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jclyons52/conduit.git"
+    "url": "https://github.com/jclyons52/typewryter.git"
   },
   "bugs": {
-    "url": "https://github.com/jclyons52/conduit/issues"
+    "url": "https://github.com/jclyons52/typewryter/issues"
   },
-  "homepage": "https://github.com/jclyons52/conduit#readme",
+  "homepage": "https://github.com/jclyons52/typewryter#readme",
   "dependencies": {
     "commander": "^14.0.1"
   }

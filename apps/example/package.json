@@ -1,22 +1,22 @@
 {
-  "name": "conduit-example",
+  "name": "typewryter-example",
   "version": "0.1.0-alpha.1",
-  "description": "Example application demonstrating @conduit/di and @conduit/cli integration",
+  "description": "Example application demonstrating @typewryter/di and @typewryter/cli integration",
   "private": true,
   "main": "lib/index.js",
   "scripts": {
     "build": "pnpm run generate && tsc",
     "build:watch": "tsc --watch",
     "dev": "tsx src/index.ts",
-    "generate": "conduit compile",
+    "generate": "typewryter generate",
     "generate:dev": "pnpm run generate && pnpm run dev",
     "clean": "rimraf lib",
     "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest"
   },
   "dependencies": {
-    "@conduit/cli": "workspace:*",
-    "@conduit/di": "workspace:*",
+    "@typewryter/cli": "workspace:*",
+    "@typewryter/di": "workspace:*",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -50,7 +50,7 @@
     "typescript": "^5.0.0"
   },
   "keywords": [
-    "conduit",
+    "typewryter",
     "dependency-injection",
     "example",
     "typescript"
