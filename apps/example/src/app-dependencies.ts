@@ -9,6 +9,7 @@ import { UserService } from './services/user-service';
 import { S3Storage } from './services/s3-storage';
 import { DynamoDBRepository } from './services/dynamodb-repository';
 import { QueueService, MessageHandler } from './services/queue-service';
+import { ConfigService } from './services/config-service';
 import { StorageClass, S3Region, LogLevel } from './types/aws-types';
 
 export type AppDependencies = {
@@ -30,6 +31,9 @@ export type AppDependencies = {
   // AWS services with complex types
   s3Storage: S3Storage;
   queueService: QueueService;
+
+  // Config service with object types
+  configService: ConfigService;
 
   // Function types
   messageHandler: MessageHandler;

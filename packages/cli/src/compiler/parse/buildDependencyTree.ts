@@ -250,11 +250,15 @@ function extractDependencies(type: Type, name: string): DependencyNode {
     }
 
     case 'object': {
-      const props = type.getProperties().map(prop => {
-        const propType = prop.getTypeAtLocation(
-          prop.getValueDeclarationOrThrow()
-        );
-        return extractDependencies(propType, prop.getName());
+      const props = type.getProperties().flatMap(prop => {
+        // Some properties (like tuple elements) don't have value declarations
+        const valueDecl = prop.getValueDeclaration();
+        if (!valueDecl) {
+          // Skip properties without declarations (like numeric indices in tuples)
+          return [];
+        }
+        const propType = prop.getTypeAtLocation(valueDecl);
+        return [extractDependencies(propType, prop.getName())];
       });
       return { name, kind, children: props };
     }

@@ -1,6 +1,6 @@
 {
   "name": "@typewryter/cli",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.4",
   "description": "Compiler and CLI tools for Conduit DI framework with tree-shaking optimization",
   "publishConfig": {
     "access": "public"

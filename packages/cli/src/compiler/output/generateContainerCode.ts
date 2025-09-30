@@ -52,13 +52,30 @@ function buildDepsConfig(nodes: DependencyNode[]): string {
     if (node.kind === 'primitive' || node.kind === 'enum') {
       return `${' '.repeat(indent)}${node.name}${opt(node)}: ${node.typeName ?? 'string'};`;
     }
-    if (node.children?.some(c => c.kind === 'primitive' || c.kind === 'enum')) {
+
+    // For object nodes, check if they have primitive/enum children
+    if (node.kind === 'object' && node.children?.some(c => c.kind === 'primitive' || c.kind === 'enum')) {
       const childLines = node.children
         .filter(c => c.kind === 'primitive' || c.kind === 'enum')
         .map(c => renderNode(c, indent + 2))
         .join('\n');
       return `${' '.repeat(indent)}${node.name}${opt(node)}: {\n${childLines}\n${' '.repeat(indent)}};`;
     }
+
+    // For class nodes, group their primitive/enum/object children under the class name
+    if (node.kind === 'class' && node.children) {
+      const configChildren = node.children.filter(
+        c => c.kind === 'primitive' || c.kind === 'enum' || c.kind === 'object'
+      );
+
+      if (configChildren.length > 0) {
+        const childLines = configChildren
+          .map(c => renderNode(c, indent + 2))
+          .join('\n');
+        return `${' '.repeat(indent)}${node.name}${opt(node)}: {\n${childLines}\n${' '.repeat(indent)}};`;
+      }
+    }
+
     return '';
   }
 
@@ -96,14 +113,21 @@ function renderFactory(node: DependencyNode): string | null {
     const args =
       node.children
         ?.map(c => {
-          if (c.kind === 'primitive' || c.kind === 'enum') return `config.${node.name}.${c.name}`;
+          if (c.kind === 'primitive' || c.kind === 'enum') {
+            return `config.${node.name}.${c.name}`;
+          }
+          if (c.kind === 'object') {
+            return `config.${node.name}.${c.name}`;
+          }
           return c.name;
         })
         .join(', ') ?? '';
-    return `${node.name}: ({ ${node.children
-      ?.filter(c => c.kind !== 'primitive' && c.kind !== 'enum')
-      .map(c => c.name)
-      .join(', ')} }) => {
+
+    const depNames = node.children
+      ?.filter(c => c.kind !== 'primitive' && c.kind !== 'enum' && c.kind !== 'object')
+      .map(c => c.name) ?? [];
+
+    return `${node.name}: ({ ${depNames.join(', ')} }) => {
         return new ${getName(node)}(${args}); ${node.circular ? ' // Note: Circular dependency detected' : ''}
       }`;
   }
