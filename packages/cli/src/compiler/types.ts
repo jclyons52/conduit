@@ -3,19 +3,15 @@ export type DependencyKind =
   | 'function'
   | 'interface'
   | 'class'
-  | 'object';
+  | 'object'
+  | 'enum'
+  | 'array'
+  | 'union'
+  | 'intersection';
 
 export interface DependencyNode {
   name: string;
-  kind:
-    | 'primitive'
-    | 'function'
-    | 'interface'
-    | 'class'
-    | 'object'
-    | 'array'
-    | 'union'
-    | 'intersection';
+  kind: DependencyKind;
   importPath?: string;
   typeName?: string; // e.g. "UserService"
   optional?: boolean;

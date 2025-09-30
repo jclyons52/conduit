@@ -15,6 +15,9 @@
     "test": "jest"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.899.0",
+    "@aws-sdk/client-s3": "^3.899.0",
+    "@aws-sdk/client-sqs": "^3.899.0",
     "@typewryter/cli": "workspace:*",
     "@typewryter/di": "workspace:*",
     "bcryptjs": "^2.4.3",

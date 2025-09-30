@@ -5,13 +5,18 @@ import {
 } from '@typewryter/di';
 
 import { App } from "../app";
-import { ILogger } from "../services/logger";
 import { UserService } from "../services/user-service";
 import { UserRepository } from "../services/user-repository";
 import { Database } from "../services/database";
 import { EmailService } from "../services/email";
 import { AuthService } from "../services/auth";
 import { Cache } from "../services/cache";
+import { DynamoDBRepository } from "../services/dynamodb-repository";
+import { S3Storage } from "../services/s3-storage";
+import { QueueService } from "../services/queue-service";
+import type { ILogger } from "../services/logger";
+import type { S3Region, StorageClass } from "../types/aws-types";
+import type { MessageHandler } from "../services/queue-service";
 
 export interface DepsConfig {
   database: {
@@ -33,6 +38,31 @@ export interface DepsConfig {
     port: number;
     password?: string | undefined;
   };
+  dynamoRepository: {
+    region: S3Region;
+    tableName: string;
+    endpoint?: string | undefined;
+  };
+  email: {
+    host: string;
+    port: number;
+    user?: string | undefined;
+    password?: string | undefined;
+  };
+  s3Storage: {
+    region: S3Region;
+    bucket: string;
+    storageClass: StorageClass;
+    endpoint?: string | undefined;
+    forcePathStyle: boolean;
+  };
+  storageClass: StorageClass;
+  queueService: {
+    region: S3Region;
+    queueUrl: string;
+    visibilityTimeout: number;
+    messageRetentionPeriod: number;
+  };
 }
 
 type FactoryDeps = {
@@ -44,6 +74,14 @@ type FactoryDeps = {
   emailService?: EmailService;
   authService?: AuthService;
   cache?: Cache;
+  dynamoRepository?: DynamoDBRepository;
+  auth?: AuthService;
+  email?: EmailService;
+  s3Storage?: S3Storage;
+  queueService?: QueueService;
+  messageHandler: MessageHandler;
+  errorLogger: (error: Error) => void;
+  requestIdGenerator: () => string;
 };
 
 export const createAppDependenciesContainer = (
@@ -71,6 +109,21 @@ authService: ({ logger, database, cache }) => {
       },
 cache: ({ logger }) => {
         return new Cache(logger, config.cache.host, config.cache.port, config.cache.password); 
+      },
+dynamoRepository: ({ logger }) => {
+        return new DynamoDBRepository(logger, config.dynamoRepository.region, config.dynamoRepository.tableName, config.dynamoRepository.endpoint); 
+      },
+auth: ({ logger, database, cache }) => {
+        return new AuthService(logger, database, cache); 
+      },
+email: ({ logger }) => {
+        return new EmailService(logger, config.email.host, config.email.port, config.email.user, config.email.password); 
+      },
+s3Storage: ({ logger }) => {
+        return new S3Storage(logger, config.s3Storage.region, config.s3Storage.bucket, config.s3Storage.storageClass, config.s3Storage.endpoint, config.s3Storage.forcePathStyle); 
+      },
+queueService: ({ logger }) => {
+        return new QueueService(logger, config.queueService.region, config.queueService.queueUrl, config.queueService.visibilityTimeout, config.queueService.messageRetentionPeriod); 
       },
 
 ...factories

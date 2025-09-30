@@ -4,13 +4,12 @@ import {
   ServiceDefinitions,
 } from '@typewryter/di';
 
-import { UserService } from "../services/user-service";
+import { UserService, Foo } from "../services/user-service";
 import { UserRepository } from "../services/user-repository";
 import { Database } from "../services/database";
-import { Logger } from "../services/logger";
 import { EmailService } from "../services/email";
-import { Foo } from "../services/user-service";
-import { INoodlerService } from "../services/noodler-service";
+import type { Logger } from "../services/logger";
+import type { INoodlerService } from "../services/noodler-service";
 
 export interface DepsConfig {
   userService: {
