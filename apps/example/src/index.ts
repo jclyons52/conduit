@@ -29,10 +29,6 @@ export function getContainer() {
         user: 'user',
         password: 'password',
       },
-      emailService: {
-        host: 'smtp.example.com',
-        port: 587,
-      },
       cache: {
         host: 'localhost',
         port: 6379,
@@ -78,10 +74,8 @@ export function getContainer() {
     },
     {
       logger: () => new LoggerService(),
-      errorLogger: () => err => console.log(err),
-      emailService: deps =>
-        new EmailService(deps.logger, 'smtp.example.com', 5623),
-      messageHandler: deps => async message => {
+      errorLogger: () => (err: Error) => console.log(err),
+      messageHandler: (deps) => async (message: string) => {
         deps.logger.info(`Processing message: ${message}`);
         // Process the message...
       },
@@ -125,8 +119,10 @@ async function bootstrap() {
   await app.start();
 }
 
-// Bootstrap the application
-bootstrap().catch(error => {
-  console.error('💥 Failed to bootstrap application:', error);
-  process.exit(1);
-});
+// Bootstrap the application (only if not in test mode)
+if (require.main === module) {
+  bootstrap().catch(error => {
+    console.error('💥 Failed to bootstrap application:', error);
+    process.exit(1);
+  });
+}

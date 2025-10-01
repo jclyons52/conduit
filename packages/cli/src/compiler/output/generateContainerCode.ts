@@ -1,4 +1,5 @@
 import { DependencyNode } from '../types';
+import { Project, Writers, SourceFile, InterfaceDeclaration, CodeBlockWriter } from 'ts-morph';
 
 interface Import {
   typeName: string;
@@ -43,70 +44,6 @@ function collectAllImports(nodes: DependencyNode[]): Import[] {
   return Array.from(seen.values());
 }
 
-function opt(node: DependencyNode): string {
-  return node.optional ? '?' : '';
-}
-
-function buildDepsConfig(nodes: DependencyNode[]): string {
-  function renderNode(node: DependencyNode, indent = 2): string {
-    if (node.kind === 'primitive' || node.kind === 'enum') {
-      return `${' '.repeat(indent)}${node.name}${opt(node)}: ${node.typeName ?? 'string'};`;
-    }
-
-    // For object nodes, check if they have primitive/enum children
-    if (
-      node.kind === 'object' &&
-      node.children?.some(c => c.kind === 'primitive' || c.kind === 'enum')
-    ) {
-      const childLines = node.children
-        .filter(c => c.kind === 'primitive' || c.kind === 'enum')
-        .map(c => renderNode(c, indent + 2))
-        .join('\n');
-      return `${' '.repeat(indent)}${node.name}${opt(node)}: {\n${childLines}\n${' '.repeat(indent)}};`;
-    }
-
-    // For class nodes, group their primitive/enum/object children under the class name
-    if (node.kind === 'class' && node.children) {
-      const configChildren = node.children.filter(
-        c => c.kind === 'primitive' || c.kind === 'enum' || c.kind === 'object'
-      );
-
-      if (configChildren.length > 0) {
-        const childLines = configChildren
-          .map(c => renderNode(c, indent + 2))
-          .join('\n');
-        return `${' '.repeat(indent)}${node.name}${opt(node)}: {\n${childLines}\n${' '.repeat(indent)}};`;
-      }
-    }
-
-    return '';
-  }
-
-  const fields = nodes
-    .map(n => renderNode(n))
-    .filter(Boolean)
-    .join('\n');
-  return `export interface DepsConfig {\n${fields}\n}`;
-}
-
-function buildFactoryDeps(nodes: DependencyNode[]): string {
-  const services = nodes.flatMap(node => {
-    if (node.kind === 'class') {
-      return [`${node.name}?: ${getName(node)};`];
-    }
-    if (node.kind === 'function') {
-      // Function types are required (not optional)
-      return [`${node.name}: ${node.typeName};`];
-    }
-    if (node.kind === 'interface') {
-      return [`${node.name}: ${getName(node)};`];
-    }
-    return [];
-  });
-
-  return `type FactoryDeps = {\n  ${services.join('\n  ')}\n};`;
-}
-
 function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -141,15 +78,6 @@ function renderFactory(node: DependencyNode): string | null {
   return null;
 }
 
-function buildServiceDefinitions(nodes: DependencyNode[]): string {
-  const factories = nodes.map(n => renderFactory(n)).filter(Boolean);
-
-  return `const serviceDefinitions: ServiceDefinitions<Required<FactoryDeps>> = {
-${factories.length > 0 ? factories.join(',\n') + ',\n' : ''}
-...factories
-};`;
-}
-
 function getName({
   name,
   typeName,
@@ -164,6 +92,20 @@ export function generateContainerCode(
   appName: string,
   deps: DependencyNode[]
 ): string {
+  // Create an in-memory project
+  const project = new Project({
+    useInMemoryFileSystem: true,
+    compilerOptions: {
+      target: 99, // ESNext
+      module: 99, // ESNext
+    },
+  });
+
+  // Create a source file
+  const sourceFile = project.createSourceFile('container.ts', '', {
+    overwrite: true,
+  });
+
   // Collect all imports
   const allImports = collectAllImports(deps);
 
@@ -179,46 +121,195 @@ export function generateContainerCode(
     targetMap.get(imp.importPath)!.add(imp.typeName);
   }
 
-  // Generate import statements
-  const valueImports = Array.from(valueImportMap.entries())
-    .map(
-      ([path, types]) =>
-        `import { ${Array.from(types).join(', ')} } from "${path}";`
-    )
-    .join('\n');
+  // Add framework imports
+  sourceFile.addImportDeclaration({
+    moduleSpecifier: '@typewryter/di',
+    namedImports: ['createContainer', 'ServiceDefinitions'],
+  });
 
-  const typeImports = Array.from(typeImportMap.entries())
-    .map(
-      ([path, types]) =>
-        `import type { ${Array.from(types).join(', ')} } from "${path}";`
-    )
-    .join('\n');
+  // Add value imports
+  for (const [path, types] of valueImportMap.entries()) {
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: path,
+      namedImports: Array.from(types),
+    });
+  }
 
-  const imports = [valueImports, typeImports].filter(Boolean).join('\n');
+  // Add type-only imports
+  for (const [path, types] of typeImportMap.entries()) {
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: path,
+      namedImports: Array.from(types),
+      isTypeOnly: true,
+    });
+  }
 
-  // Generate code sections
-  const depsConfig = buildDepsConfig(deps);
-  const factoryDeps = buildFactoryDeps(deps);
-  const serviceDefs = buildServiceDefinitions(deps);
+  // Add DepsConfig interface
+  addDepsConfigInterface(sourceFile, deps);
 
-  return `
-import {
-  createContainer,
-  ServiceDefinitions,
-} from '@typewryter/di';
+  // Add FactoryDeps type
+  addFactoryDepsType(sourceFile, deps);
 
-${imports}
+  // Add container creation function
+  addContainerFunction(sourceFile, appName, deps);
 
-${depsConfig}
+  return sourceFile.getFullText();
+}
 
-${factoryDeps}
+function addDepsConfigInterface(sourceFile: SourceFile, deps: DependencyNode[]) {
+  const interfaceDecl = sourceFile.addInterface({
+    name: 'DepsConfig',
+    isExported: true,
+  });
 
-export const create${capitalize(appName)}Container = (
-  config: DepsConfig,
-  factories: ServiceDefinitions<FactoryDeps>
-) => {
-  ${serviceDefs}
-  return createContainer(serviceDefinitions);
-};
-`;
+  function addProperties(
+    target: InterfaceDeclaration,
+    nodes: DependencyNode[]
+  ) {
+    for (const node of nodes) {
+      if (node.kind === 'primitive' || node.kind === 'enum') {
+        target.addProperty({
+          name: node.name,
+          type: node.typeName ?? 'string',
+          hasQuestionToken: node.optional,
+        });
+      } else if (
+        node.kind === 'object' &&
+        node.children?.some(c => c.kind === 'primitive' || c.kind === 'enum')
+      ) {
+        target.addProperty({
+          name: node.name,
+          hasQuestionToken: node.optional,
+          type: Writers.objectType({
+            properties: node.children
+              .filter(c => c.kind === 'primitive' || c.kind === 'enum')
+              .map(c => ({
+                name: c.name,
+                type: c.typeName ?? 'string',
+                hasQuestionToken: c.optional,
+              })),
+          }),
+        });
+      } else if (node.kind === 'class' && node.children) {
+        const configChildren = node.children.filter(
+          c =>
+            c.kind === 'primitive' || c.kind === 'enum' || c.kind === 'object'
+        );
+
+        if (configChildren.length > 0) {
+          const nestedProps = configChildren.map(c => {
+            if (c.kind === 'object' && c.children) {
+              return {
+                name: c.name,
+                type: Writers.objectType({
+                  properties: c.children
+                    .filter(
+                      child =>
+                        child.kind === 'primitive' || child.kind === 'enum'
+                    )
+                    .map(child => ({
+                      name: child.name,
+                      type: child.typeName ?? 'string',
+                      hasQuestionToken: child.optional,
+                    })),
+                }),
+                hasQuestionToken: c.optional,
+              };
+            }
+            return {
+              name: c.name,
+              type: c.typeName ?? 'string',
+              hasQuestionToken: c.optional,
+            };
+          });
+
+          target.addProperty({
+            name: node.name,
+            hasQuestionToken: node.optional,
+            type: Writers.objectType({
+              properties: nestedProps,
+            }),
+          });
+        }
+      }
+    }
+  }
+
+  addProperties(interfaceDecl, deps);
+}
+
+function addFactoryDepsType(sourceFile: SourceFile, deps: DependencyNode[]) {
+  const typeMembers: Array<{ name: string; type: string; optional: boolean }> =
+    [];
+
+  for (const node of deps) {
+    if (node.kind === 'class') {
+      typeMembers.push({
+        name: node.name,
+        type: getName(node),
+        optional: true,
+      });
+    } else if (node.kind === 'function') {
+      typeMembers.push({
+        name: node.name,
+        type: node.typeName!,
+        optional: false,
+      });
+    } else if (node.kind === 'interface') {
+      typeMembers.push({
+        name: node.name,
+        type: getName(node),
+        optional: false,
+      });
+    }
+  }
+
+  sourceFile.addTypeAlias({
+    name: 'FactoryDeps',
+    type: Writers.objectType({
+      properties: typeMembers.map(m => ({
+        name: m.name,
+        type: m.type,
+        hasQuestionToken: m.optional,
+      })),
+    }),
+  });
+}
+
+function addContainerFunction(
+  sourceFile: SourceFile,
+  appName: string,
+  deps: DependencyNode[]
+) {
+  const functionName = `create${capitalize(appName)}Container`;
+
+  sourceFile.addFunction({
+    name: functionName,
+    isExported: true,
+    parameters: [
+      { name: 'config', type: 'DepsConfig' },
+      { name: 'factories', type: 'ServiceDefinitions<FactoryDeps>' },
+    ],
+    statements: (writer: CodeBlockWriter) => {
+      // Create serviceDefinitions object
+      writer.writeLine(
+        'const serviceDefinitions: ServiceDefinitions<Required<FactoryDeps>> = {'
+      );
+
+      // Add service factories
+      for (const node of deps) {
+        const factory = renderFactory(node);
+        if (factory) {
+          writer.writeLine(factory + ',');
+        }
+      }
+
+      // Spread factories
+      writer.writeLine('...factories');
+      writer.writeLine('};');
+
+      // Return statement
+      writer.writeLine('return createContainer(serviceDefinitions);');
+    },
+  });
 }

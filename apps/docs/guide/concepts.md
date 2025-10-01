@@ -1,164 +1,184 @@
 # Core Concepts
 
-Conduit is built around several key concepts that make it powerful yet simple to use.
+Typewryter is built around several key concepts that make it powerful yet simple to use.
 
-## Service Definitions
+## Dependencies Type Definition
 
-Service definitions are the heart of Conduit. They describe how to create your services using factory functions:
+The dependencies type is the heart of Typewryter. It describes all the dependencies your application needs:
 
 ```typescript
-import {
-  ServiceDefinitions,
-  singleton,
-  scoped,
-  transient,
-} from '@typewryter/di';
+// app-dependencies.ts
+export type AppDependencies = {
+  // Interfaces - must be provided externally
+  logger: ILogger;
 
-const services: ServiceDefinitions<{
-  config: Config;
-  logger: Logger;
+  // Classes - factories will be generated automatically
   database: Database;
-}> = {
-  config: singleton(() => new AppConfig()),
-  logger: singleton(() => new ConsoleLogger('[APP]')),
-  database: scoped(
-    container => new PostgresDatabase(container.get('config').databaseUrl)
-  ),
+  userService: UserService;
+  emailService: EmailService;
+
+  // Functions - must be provided externally
+  errorLogger: (error: Error) => void;
+  requestIdGenerator: () => string;
 };
 ```
 
-## Lifecycle Scopes
+The CLI analyzes this type and generates a container with factories for all class dependencies.
 
-Conduit supports three service lifetimes:
+## Generated Service Definitions
 
-### Singleton
-
-Created once per container and reused for all requests:
+The compiler generates service definitions from your dependencies type:
 
 ```typescript
-logger: singleton(() => new ConsoleLogger('[APP]'));
+// Generated automatically by CLI
+const serviceDefinitions: ServiceDefinitions<Required<FactoryDeps>> = {
+  database: ({ logger }) => {
+    return new Database(logger, config.database.url, config.database.port);
+  },
+  userService: ({ logger, database, emailService }) => {
+    return new UserService(logger, database, emailService);
+  },
+  emailService: ({ logger }) => {
+    return new EmailService(logger, config.emailService.apiKey);
+  },
+  ...factories // User-provided external providers
+};
 ```
 
-### Scoped
+## Configuration Interface
 
-Created once per scope (usually per request/operation):
+For class dependencies with primitive/enum/object constructor parameters, the compiler generates a configuration interface:
 
 ```typescript
-database: scoped(container => new PostgresDatabase(connectionString));
+// Class with config parameters
+class Database {
+  constructor(logger: ILogger, url: string, port: number) {}
+}
+
+// Generated configuration interface
+export interface DepsConfig {
+  database: {
+    url: string;
+    port: number;
+  };
+}
+
+// Usage
+const config: DepsConfig = {
+  database: {
+    url: 'postgresql://localhost/mydb',
+    port: 5432
+  }
+};
 ```
 
-### Transient
+## External Providers
 
-Created fresh every time it's requested:
-
-```typescript
-requestId: transient(() => crypto.randomUUID());
-```
-
-## Factory Functions
-
-Factory functions are pure TypeScript functions that create your services. They can:
-
-- **Take no dependencies**: `() => new Service()`
-- **Depend on other services**: `container => new Service(container.get('dependency'))`
-- **Use external parameters**: Parameters are extracted during compilation
+Interfaces and function types cannot be instantiated automatically, so you provide them via the `factories` parameter:
 
 ```typescript
-// Simple factory
-logger: singleton(() => new ConsoleLogger('[APP]'));
+// Your dependencies type
+export type AppDependencies = {
+  logger: ILogger;  // Interface - must be provided
+  errorLogger: (error: Error) => void;  // Function - must be provided
+  database: Database;  // Class - auto-generated
+};
 
-// With dependencies
-userService: scoped(
-  container =>
-    new UserService(container.get('database'), container.get('logger'))
+// Usage
+const container = createAppDependenciesContainer(
+  config,
+  {
+    logger: () => new ConsoleLogger(),
+    errorLogger: (error) => console.error(error),
+  }
 );
-
-// With external parameters (extracted during compilation)
-database: singleton(() => new PostgresDatabase('postgresql://localhost/mydb'));
 ```
 
 ## Containers
 
-Containers hold your services and manage their lifecycles:
+Containers hold your services and provide dependency injection:
 
 ```typescript
 import { createContainer } from '@typewryter/di';
 
-const container = createContainer(services);
+// Create container with generated service definitions
+const container = createContainer(serviceDefinitions);
 
-// Get services
-const logger = container.get('logger');
-const database = container.get('database');
-
-// Create scoped containers
-const scopedContainer = container.createScope();
-```
-
-## Tree-shaking Compilation
-
-The compile-time analysis identifies:
-
-1. **Entry points** - Services you want to compile
-2. **Dependency trees** - All services needed by entry points
-3. **External parameters** - Values extracted from factories
-4. **Unused services** - Services to exclude from the bundle
-
-```bash
-# Before compilation: All services (15KB)
-logger, database, userService, emailService, notificationService...
-
-# After compilation: Only what you need (1.6KB)
-npx typewryter compile userService
-# Result: userService + database + logger only
+// Get services with full type safety
+const logger = container.get('logger');      // Typed as ILogger
+const database = container.get('database');  // Typed as Database
 ```
 
 ## Type Safety
 
-Conduit provides complete compile-time type safety:
+Typewryter provides complete compile-time type safety:
 
 ```typescript
-// ServiceDefinitions ensures all services are properly typed
-const services: ServiceDefinitions<{
-  logger: Logger; // ✅ Must implement Logger interface
-  database: Database; // ✅ Must implement Database interface
-}> = {
-  logger: singleton(() => new ConsoleLogger('[APP]')), // ✅ Returns Logger
-  database: scoped(container => new PostgresDatabase()), // ✅ Returns Database
+// Dependencies type defines all providers
+export type AppDependencies = {
+  logger: ILogger;      // ✅ Must implement ILogger interface
+  database: Database;   // ✅ Must be Database class
 };
 
+// Generated FactoryDeps ensures correct types
+type FactoryDeps = {
+  database?: Database;  // ✅ Optional (can be overridden)
+  logger: ILogger;      // ✅ Required external provider
+};
+
+// Container creation is type-safe
+const container = createAppDependenciesContainer(
+  config,
+  {
+    logger: () => new ConsoleLogger(),  // ✅ Returns ILogger
+    // database is auto-generated, can be overridden here
+  }
+);
+
 // Container.get() is fully typed
-const logger: Logger = container.get('logger'); // ✅ Typed as Logger
-const unknown = container.get('unknownService'); // ❌ TypeScript error
+const logger = container.get('logger');   // ✅ Typed as ILogger
+const database = container.get('database'); // ✅ Typed as Database
 ```
 
-## External Parameters
+## Provider Inference
 
-Parameters used in factories are automatically extracted and structured:
+The compiler automatically infers how to provide each dependency:
+
+| Type | How Provided | Example |
+|------|--------------|---------|
+| Class | Auto-generated factory | `database: Database` → `new Database(...)` |
+| Interface | External provider required | `logger: ILogger` → Must supply in `factories` |
+| Function | External provider required | `errorLogger: (error: Error) => void` → Must supply in `factories` |
+| Primitive | Configuration value | Constructor param `url: string` → `config.database.url` |
+| Enum | Configuration value | Constructor param `region: Region` → `config.service.region` |
+| Object | Configuration value | Constructor param `options: {...}` → `config.service.options` |
+
+## Dependency Resolution
+
+Constructor parameters are matched to providers by type:
 
 ```typescript
-// Your service definition
-database: singleton(() => new PostgresDatabase('postgresql://localhost/mydb')),
-emailService: singleton(() => new SMTPService('api-key', 'no-reply@example.com'))
-
-// Generated interface
-export interface ExternalParams {
-  database: {
-    connectionString: string;
-  };
-  emailService: {
-    apiKey: string;
-    fromAddress: string;
-  };
+// Class definition
+class UserService {
+  constructor(
+    private logger: ILogger,
+    private db: Database,        // Parameter name is "db"
+    private mailer: EmailService // Parameter name is "mailer"
+  ) {}
 }
 
-// Usage in generated code
-export function createUserService(params: ExternalParams) {
-  const services = {
-    database: singleton(() => new PostgresDatabase(params.database.connectionString)),
-    emailService: singleton(() => new SMTPService(params.emailService.apiKey, params.emailService.fromAddress))
-  }
-  // ...
+// Dependencies type
+export type AppDependencies = {
+  logger: ILogger;
+  database: Database;    // Provider name is "database" (different from "db")
+  emailService: EmailService; // Provider name is "emailService" (different from "mailer")
+  userService: UserService;
+};
+
+// Generated factory correctly maps by type, not name
+userService: ({ logger, database, emailService }) => {
+  return new UserService(logger, database, emailService);
 }
 ```
 
-This hierarchical structure makes it easy to configure your services in production while maintaining type safety.
+This allows you to use any parameter names in your classes while maintaining flexibility in how you name your providers.
